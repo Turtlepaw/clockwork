@@ -5,6 +5,7 @@ import * as path from "path";
 import inquirer from "inquirer";
 import chalk from "chalk"; // For colored text
 import { initMessage, progressIndicator, updater } from "./utils";
+import { getPackages } from "./package";
 
 // get version from package.json
 const VERSION = "__VERSION__";
@@ -74,62 +75,68 @@ export default async function main() {
     console.log(`adbExe: ${adbExe}`);
   }
 
-  // Preprocessing
-  const preprocessScript = path.resolve(
-    "..",
-    "wff-build-tools",
-    "preprocess.py"
-  );
-  if (!fs.existsSync(preprocessScript)) {
-    const answer = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "download-preprocessor",
-        message: "Preprocessor script not found. Download now?",
-        default: false,
-      },
-    ]);
+  const packages = getPackages();
+  if (packages.isPackageInstalled("xml-preprocessor")) {
+    // Preprocessing
+    const preprocessScript = path.resolve(
+      packages.getPackagePath("xml-preprocessor"),
+      "preprocess.py"
+    );
+    if (!fs.existsSync(preprocessScript)) {
+      const answer = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "download-preprocessor",
+          message: "Preprocessor script not found. Download now?",
+          default: false,
+        },
+      ]);
 
-    if (answer["download-preprocessor"]) {
-      const spinner = await progressIndicator(
-        "Downloading preprocessor script..."
-      );
-      try {
-        // Create dir if not exists
-        if (!fs.existsSync(path.dirname(preprocessScript))) {
-          fs.mkdirSync(path.dirname(preprocessScript), { recursive: true });
-        }
-
-        execSync(
-          `curl -o ${preprocessScript} https://raw.githubusercontent.com/gondwanasoft/xml-preprocessor/main/preprocess.py`,
-          { stdio: "inherit" }
+      if (answer["download-preprocessor"]) {
+        const spinner = await progressIndicator(
+          "Downloading preprocessor script..."
         );
-        spinner.stop(true);
-      } catch {
-        spinner.stop(false);
-        console.error("Download failed.");
+        try {
+          // Create dir if not exists
+          if (!fs.existsSync(path.dirname(preprocessScript))) {
+            fs.mkdirSync(path.dirname(preprocessScript), { recursive: true });
+          }
+
+          execSync(
+            `curl -o ${preprocessScript} https://raw.githubusercontent.com/gondwanasoft/xml-preprocessor/main/preprocess.py`,
+            { stdio: "inherit" }
+          );
+          spinner.stop(true);
+        } catch {
+          spinner.stop(false);
+          console.error("Download failed.");
+          process.exit(6);
+        }
+      } else {
+        console.error("Failed to find preprocess.py in module folder.");
         process.exit(6);
       }
-    } else {
-      console.error("Preprocessor script not downloaded.");
-      //process.exit(6); // WFF preprocessor isn't required
     }
-  }
 
-  const spinner = await progressIndicator("Preprocessing...");
-  try {
-    execSync(
-      `python ${preprocessScript} watchface/watchface-pp.xml watchface/src/main/res/raw/watchface.xml -y ${
-        debugMode ? "-d" : ""
-      }`,
-      { stdio: "inherit" }
+    const spinner = await progressIndicator("Preprocessing...");
+    try {
+      execSync(
+        `python ${preprocessScript} watchface/watchface-pp.xml watchface/src/main/res/raw/watchface.xml -y ${
+          debugMode ? "-d" : ""
+        }`,
+        { stdio: "inherit" }
+      );
+
+      spinner.stop(true);
+    } catch {
+      spinner.stop(false);
+      console.error("Preprocessor error; build stopped.");
+      process.exit(1);
+    }
+  } else {
+    console.error(
+      chalk.yellow("Preprocessor module not installed, skipping preprocessing.")
     );
-
-    spinner.stop(true);
-  } catch {
-    spinner.stop(false);
-    console.error("Preprocessor error; build stopped.");
-    process.exit(1);
   }
 
   // Validation

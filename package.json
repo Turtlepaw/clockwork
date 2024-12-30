@@ -1,6 +1,6 @@
 {
   "name": "wff-build-script",
-  "version": "1.1.1",
+  "version": "1.1.0",
   "main": "scripts/build.js",
   "repository": "https://github.com/gondwanasoft/wff-build-script.git",
   "author": "https://github.com/gondwanasoft",
@@ -17,6 +17,7 @@
     "debug": "yarn compile && yarn bundle && yarn postbuild && yarn pkg-debug && cd wf"
   },
   "dependencies": {
+    "@vscode/sudo-prompt": "^9.3.1",
     "chalk": "4",
     "inquirer": "^12.3.0",
     "ora": "^8.1.1"

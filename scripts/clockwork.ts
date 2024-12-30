@@ -6,6 +6,7 @@ import inquirer from "inquirer";
 import chalk from "chalk"; // For colored text
 import build from "./build";
 import { initMessage, updater } from "./utils";
+import { parsePackage } from "./package";
 
 // get version from package.json
 const VERSION = "__VERSION__";
@@ -62,16 +63,6 @@ async function progressIndicator(taskName: string): Promise<Spinner> {
 
   // Return stop method for external usage
   return { stop, updateMessage };
-}
-
-function parsePackage(packageUrl: string) {
-  // Parse the package e.g. https://github.com/owner/repo.git@latest
-  // @latest defines the release tag (optional)
-  const parts = packageUrl.split("@");
-  const url = parts[0];
-  const tag = parts[1] || "latest";
-  const repoName = path.basename(url, ".git");
-  return { url, tag, repoName };
 }
 
 async function addPackage(
