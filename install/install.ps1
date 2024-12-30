@@ -16,6 +16,3 @@ Invoke-WebRequest -Uri $latestReleaseUrl -OutFile $destinationPath
 
 Write-Output "Clockwork has been installed successfully."
 Write-Output "Restart your terminal to start using Clockwork."
-
-# Self destruct
-Remove-Item -Path $MyInvocation.MyCommand.Path -Force
