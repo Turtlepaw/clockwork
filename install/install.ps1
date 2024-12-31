@@ -1,5 +1,12 @@
 # Define the installation directory
-$installDir = "C:\Program Files\Clockwork"
+$installDir = "~\Clockwork"
+Write-Debug "Installation directory: $installDir"
+
+# Check administrator privileges
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    # Elevate the script
+    Start-Process powershell.exe -Verb RunAs -ArgumentList "-File $PSCommandPath"
+}
 
 # Create the installation directory if it doesn't exist
 if (-Not (Test-Path -Path $installDir)) {
@@ -16,3 +23,7 @@ Invoke-WebRequest -Uri $latestReleaseUrl -OutFile $destinationPath
 
 Write-Output "Clockwork has been installed successfully."
 Write-Output "Restart your terminal to start using Clockwork."
+
+# Press any key to exit
+Write-Host "Press any key to exit..."
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
