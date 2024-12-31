@@ -7,6 +7,7 @@ import chalk from "chalk"; // For colored text
 import build from "./build";
 import { initMessage, updater } from "./utils";
 import { parsePackage } from "./package";
+import { executeCommand } from "./command";
 
 // get version from package.json
 const VERSION = "__VERSION__";
@@ -15,6 +16,7 @@ const commands: Record<string, string[]> = {
   add: ["add"],
   build: ["build"],
   init: ["init", "initialize"],
+  packages: ["packages"],
 };
 
 const commandInfo: Record<string, string> = {
@@ -22,6 +24,7 @@ const commandInfo: Record<string, string> = {
   add: "Add a package to the package.json file",
   build: "Build the watch face",
   init: "Initialize the package.json file for the project",
+  packages: "List all installed packages",
 };
 
 interface Spinner {
@@ -102,10 +105,19 @@ async function installPackage(
   }
 
   spinner.updateMessage(`Cloning ${packageUrl}...`);
-  // Clone the repo into the packages folder
-  execSync(`git clone ${packageUrl} ${packagePath}`, {
-    cwd,
-  });
+
+  try {
+    // Use spawnSync instead of execSync for better cross-platform support
+    executeCommand("git", ["clone", packageUrl, packagePath], { cwd });
+  } catch (error: any) {
+    spinner.stop(false);
+    if (error.code === "ENOENT") {
+      throw new Error(
+        "Git is not installed or not available in PATH. Please install Git and try again."
+      );
+    }
+    throw error;
+  }
 
   spinner.stop();
 }
@@ -149,7 +161,7 @@ export default async function main() {
   const version = args.includes("--version");
 
   initMessage(VERSION);
-  if (!version) updater(debugMode, VERSION);
+  if (!version) await updater(debugMode, VERSION);
 
   // If user ran clockwork --version
   if (version) {
@@ -175,6 +187,18 @@ export default async function main() {
     spinner.stop();
     return;
   } else if (isCommand(commands.add)) {
+    // Check if package.json exists
+    if (!fs.existsSync(path.join(cwd, "package.json"))) {
+      console.log(chalk.red("No package.json found."));
+      console.log(
+        `If ${chalk.magentaBright(
+          "this directory"
+        )} is a Watch Face Format project, run ${chalk.green(
+          "clockwork init"
+        )} to create a package.json file.`
+      );
+      return;
+    }
     // If user ran clockwork add <repo>
     const repo = args[1];
     const spinner = await progressIndicator(`Adding packages...`);
@@ -188,6 +212,14 @@ export default async function main() {
     return;
   } else if (isCommand(commands.build)) {
     build();
+    return;
+  } else if (isCommand(commands.packages)) {
+    const packageJson = require(path.join(cwd, "package.json"));
+    console.log("Installed packages:");
+    for (const pkg of packageJson.dependencies || {}) {
+      const { repoName, tag } = parsePackage(pkg);
+      console.log(`  ${repoName}@${tag}`);
+    }
     return;
   } else if (isCommand(commands.init)) {
     // If user ran clockwork init
