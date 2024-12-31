@@ -1,3 +1,5 @@
+<div align="center"><img src="./assets/wff_banner.png" /></div>
+
 # Clockwork
 
 Clockwork is an open-source package manager for [Google-Samsung Watch Face Format (WFF)](https://developer.android.com/training/wearables/wff) projects. It can download reusable WFF components and build your watch face.
@@ -28,17 +30,15 @@ You'll need a WFF project folder and files. If you haven't already got one, here
 
 ## Installation
 
-### Windows
+The install file is the fastest way to setup clockwork, it handles downloading the binary for your platform and adding it to the path.
 
-Run this as Administrator to download clockwork and add it to `$PATH`.
+### Windows
 
 ```shell
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1 -UseBasicParsing | Invoke-Expression
 ```
 
 ### Linux/MacOS
-
-Run this to download clockwork and add it to `$PATH`.
 
 ```shell
 curl -s https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.sh | sudo bash
@@ -120,7 +120,7 @@ If you're using [XML Preprocessor](https://github.com/gondwanasoft/xml-preproces
 
 - [This site](https://nthn.uk/blog/wfs) describes an equivalent process that doesn’t require _Android Studio_.
 
-## For Developers
+## Developing Clockwork
 
 ### Compiling executables
 
@@ -138,7 +138,14 @@ yarn install
 yarn build
 ```
 
-This will compile the typescript files to javascript and build the executables (e.g. `build-win.exe` for windows) in the current directory. This will package all the dependencies and Node.js into the executable, allowing it to be run even on devices without Node.js installed.
+#### 🧐 What does this do?
+
+1. Compiles all the Typescript files in `./scripts` to Javascript files in `./build/scripts`
+2. Bundles all the compiled javascript files and dependencies into `index.js`
+3. Injects the current version found in `./package.json` into `./build/index.js`
+4. Packages Node.js and `./build/index.js` into an executable for Linux, Mac OS, and Windows
+
+This makes it work on devices even without Node.js installed!
 
 ### Publishing
 
