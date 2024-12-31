@@ -13,6 +13,9 @@ if (-Not (Test-Path -Path $installDir)) {
     New-Item -ItemType Directory -Path $installDir
 }
 
+# Set permissions for the installation directory
+icacls $installDir /grant "Everyone:(OI)(CI)F" /T
+
 # Download the latest release
 $latestReleaseUrl = "https://github.com/Turtlepaw/clockwork/releases/latest/download/clockwork-win.exe"
 $destinationPath = Join-Path -Path $installDir -ChildPath "clockwork.exe"

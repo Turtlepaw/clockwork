@@ -51,6 +51,8 @@ curl -s https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/in
 
 ### Add a repository
 
+Clockwork will run
+
 ```shell
 clockwork add <repo-url>
 ```
@@ -156,6 +158,10 @@ Executables should be published as a GitHub release so that the auto-updater can
 The script automatically checks for updates of itself when running.
 
 For the auto-updater to work, all executables built **must retain the original name given** and be published as assets in a GitHub release. You must also set the `repoOwner` (and `repoName` if needed) for the auto updater to fetch assets from.
+
+##### Testing the auto updater
+
+For testing, temporarily set the `version` in `package.json` to something lower and recompile the executables, the version set in `package.json` will automatically be injected into the compiled javascript.
 
 ## Acknowledgements
 
