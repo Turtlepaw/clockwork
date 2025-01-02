@@ -1,4 +1,4 @@
-<div align="center"><img src="./assets/wff_banner.png" /></div>
+<div align="center"><img src="./docs/public/clockwork_banner.png" /></div>
 
 # Clockwork
 

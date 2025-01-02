@@ -1,9 +1,21 @@
 import React from "react";
 import { DocsThemeConfig } from "nextra-theme-docs";
 import { useConfig } from "nextra-theme-docs";
+import Image from "next/image";
 
 const config: DocsThemeConfig = {
-  logo: <span>Clockwork</span>,
+  logo: (
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <Image
+        src="/clockwork_icon.png"
+        width={20}
+        height={20}
+        alt="Logo"
+        style={{ marginRight: 10 }}
+      />
+      <span>Clockwork</span>
+    </div>
+  ),
   head: () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     let { title } = useConfig();
@@ -29,6 +41,14 @@ const config: DocsThemeConfig = {
   },
   toc: {
     backToTop: true,
+  },
+  backgroundColor: {
+    dark: "#030b0f",
+  },
+  color: {
+    hue: 197.65,
+    saturation: 66.93,
+    //lightness: 50,
   },
 };
 

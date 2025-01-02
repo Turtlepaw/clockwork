@@ -9,8 +9,19 @@ Installing Clockwork is quick and easy, and should take less than a few seconds.
 Run this command in Powershell:
 
 ```shell copy
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1 -UseBasicParsing | Invoke-Expression
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1 -UseBasicParsing | Invoke-Expression"
 ```
+
+<Callout type="info">
+  You can set a custom installation path by appending the path to the script, like:
+
+```shell copy
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1 -UseBasicParsing | Invoke-Expression -ArgumentList "-installPath 'C:\CustomPath'"
+```
+
+It's highly recommended to use the default path as there may be issues with the script if you use a custom path.
+
+</Callout>
 
 ### Linux/MacOS
 
