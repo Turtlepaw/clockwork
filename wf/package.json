@@ -1,8 +1,0 @@
-{
-  "name": "wf",
-  "version": "1.0.0",
-  "description": "",
-  "dependencies": {
-    "xml-preprocessor": "https://github.com/Turtlepaw/xml-preprocessor@latest"
-  }
-}

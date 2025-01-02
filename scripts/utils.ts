@@ -6,6 +6,7 @@ import inquirer from "inquirer";
 import https from "https";
 import sudo from "@vscode/sudo-prompt";
 import { platform } from "os";
+import { PACKAGE_JSON_NAME } from "./constants";
 
 // GitHub API URL for the latest release
 const repoOwner = "Turtlepaw";
@@ -358,3 +359,17 @@ export function initMessage(version: string) {
     )
   );
 }
+
+export const errors = {
+  notInitialized: () => {
+    console.log(chalk.red(`No ${PACKAGE_JSON_NAME} found.`));
+    console.log(
+      `If ${chalk.magentaBright(
+        "this directory"
+      )} is a Watch Face Format project, run ${chalk.green(
+        "clockwork init"
+      )} to create a ${PACKAGE_JSON_NAME} file.`
+    );
+    return;
+  },
+};

@@ -20,6 +20,7 @@
     "@vscode/sudo-prompt": "^9.3.1",
     "chalk": "4",
     "inquirer": "^12.3.0",
+    "js-yaml": "^4.1.0",
     "ora": "^8.1.1"
   },
   "overrides": {
@@ -28,6 +29,7 @@
     }
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.10.2",
     "@vercel/ncc": "^0.38.3",
     "@yao-pkg/pkg": "^6.2.0",
