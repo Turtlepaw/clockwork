@@ -1,6 +1,6 @@
 build
 node_modules
-yarn.lock
+#yarn.lock
 build-*
 clockwork-*
 wf/packages
