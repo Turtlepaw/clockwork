@@ -1,0 +1,37 @@
+import { Steps, Cards } from "nextra/components";
+import { LinkButton } from "@/components/Button";
+
+# Compiling Clockwork
+
+<Steps>
+  ### Install Node.js
+  Node.js 20 or higher is required to compile Clockwork.
+
+{" "}
+
+<Cards style={{ width: 280 }}>
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">link</span>}
+    title="Ubuntu 20.04 (digitalocean)"
+    href="https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-20-04"
+  />
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">link</span>}
+    title="Install from nodejs.org"
+    href="https://nodejs.org/en/download"
+  />
+</Cards>
+
+### Install dependencies
+
+```shell
+yarn install
+```
+
+### Compile Clockwork
+
+```shell
+yarn build
+```
+
+</Steps>

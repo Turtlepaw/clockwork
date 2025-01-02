@@ -5,18 +5,28 @@ import * as path from "path";
 import inquirer from "inquirer";
 import chalk from "chalk"; // For colored text
 import build from "./build";
-import { errors, initMessage, updater } from "./utils";
 import {
+  errors,
+  initMessage,
+  progressIndicator,
+  Spinner,
+  updater,
+  verifyInstallationPath,
+} from "./utils";
+import {
+  getDefaultBranch,
   getLatestTag,
-  Package,
   parseDependency,
   parsePackage,
+  readPackageFile,
+  writePackageFile,
 } from "./package";
 import { executeCommand } from "./command";
 import { PACKAGE_JSON_NAME } from "./constants";
 import jsYaml from "js-yaml";
+import { Dependency, PackageFile } from "./types/package";
 
-// get version from package.json
+// get version from PACKAGE_JSON_NAME
 const VERSION = "__VERSION__";
 const commands: Record<string, string[]> = {
   install: ["i", "install"],
@@ -36,50 +46,7 @@ const commandInfo: Record<string, string> = {
   upgrade: "Upgrade installed packages",
 };
 
-interface Spinner {
-  stop: (isSuccess?: boolean) => void;
-  updateMessage: (message: string) => void;
-}
-
-// Custom spinner function
-async function progressIndicator(taskName: string): Promise<Spinner> {
-  const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-  let frameIndex = 0;
-  let intervalId: NodeJS.Timeout;
-
-  // Function to animate the spinner
-  const animate = () => {
-    process.stdout.write(`\r${chalk.cyan(frames[frameIndex])} ${taskName}`); // Overwrite the line with each frame
-    frameIndex = (frameIndex + 1) % frames.length; // Cycle through frames
-  };
-
-  // Start the spinner
-  intervalId = setInterval(animate, 80);
-
-  // Stop method
-  function stop(isSuccess = true) {
-    clearInterval(intervalId); // Stop the spinner
-    process.stdout.write(
-      `\r${isSuccess ? chalk.green("✓") : chalk.red("✘")} ${taskName}\n`
-    );
-  }
-
-  // Function to update the message
-  function updateMessage(message: string) {
-    clearInterval(intervalId);
-    taskName = message;
-    intervalId = setInterval(animate, 80);
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Return stop method for external usage
-  return { stop, updateMessage };
-}
-
 function resolveVersion(version: string, latest: string) {
-  console.log(version, latest);
-  console.log(version == "latest");
   if (version == "latest") {
     return latest;
   } else return version;
@@ -91,54 +58,99 @@ async function addPackage(
   cwd: string,
   spinner: Spinner
 ) {
-  spinner.updateMessage(`Installing package...`);
-  // Check if url is provided
-  if (!packageStr) {
+  try {
+    spinner.updateMessage(`Installing package...`);
+
+    if (!packageStr) {
+      spinner.stop(false);
+      throw new Error("Please provide a package to add.");
+    }
+
+    if (!packageStr.startsWith("https://")) {
+      const manifestUrl =
+        "https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/manifest.yml";
+
+      let manifestContent;
+      try {
+        const response = await fetch(manifestUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        manifestContent = await response.text();
+      } catch (err: any) {
+        spinner.stop(false);
+        throw new Error(`Failed to fetch manifest: ${err.message}`);
+      }
+
+      let manifest;
+      try {
+        manifest = jsYaml.load(manifestContent) as Record<string, Dependency>;
+      } catch (err: any) {
+        spinner.stop(false);
+        throw new Error(`Error parsing manifest: ${err.message}`);
+      }
+
+      const packageInfo = manifest[packageStr];
+      if (!packageInfo) {
+        spinner.stop(false);
+        throw new Error(`Package ${packageStr} not found in manifest.`);
+      }
+      packageStr = packageInfo.url;
+    }
+
+    let latestTag = getLatestTag(packageStr);
+    if (!latestTag) {
+      spinner.pause();
+      const answer = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "downloadSource",
+          message: "No tags for this package. Install default branch instead?",
+          default: false,
+        },
+      ]);
+      spinner.resume();
+
+      if (!answer.downloadSource) {
+        spinner.stop(false);
+        console.log(chalk.red("Installation aborted. No tags available."));
+        return;
+      }
+
+      latestTag = getDefaultBranch(packageStr);
+    }
+
+    const {
+      url: packageUrl,
+      version: _version,
+      repoName,
+    } = parsePackage(packageStr);
+    const version = resolveVersion(_version, latestTag);
+
+    await installPackage(packageUrl, moduleFolder, cwd, spinner, version);
+
+    spinner.updateMessage(`Adding package to ${PACKAGE_JSON_NAME}...`);
+
+    let pkg: PackageFile;
+    try {
+      pkg = readPackageFile();
+    } catch (err: any) {
+      spinner.stop(false);
+      throw new Error(`Failed to read ${PACKAGE_JSON_NAME}: ${err.message}`);
+    }
+
+    pkg.dependencies = pkg.dependencies || {};
+    pkg.dependencies[repoName] = { version, url: packageUrl };
+
+    writePackageFile(pkg);
+
+    spinner.stop(true);
+    console.log(chalk.green(`Package ${repoName} added successfully.`));
+    return process.exit(0);
+  } catch (err: any) {
     spinner.stop(false);
-    throw new Error("Please provide a package to add.");
-  } else if (!packageStr.startsWith("https://")) {
-    // Resolve from manifest: https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/manifest.yml
-    const manifestUrl =
-      "https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/manifest.yml";
-    const response = await fetch(manifestUrl);
-    if (!response.ok) {
-      spinner.stop(false);
-      throw new Error(`Failed to fetch manifest from ${manifestUrl}`);
-    }
-    const manifestContent = await response.text();
-    const manifest = jsYaml.load(manifestContent) as Record<string, Package>;
-    const packageInfo = manifest[packageStr];
-    if (!packageInfo) {
-      spinner.stop(false);
-      throw new Error(`Package ${packageStr} not found in manifest.`);
-    }
-    packageStr = packageInfo.url;
+    console.error(chalk.red(`Error: ${err.message}`));
   }
-
-  const latestTag = getLatestTag(packageStr);
-  const {
-    url: packageUrl,
-    version: _version,
-    repoName,
-  } = parsePackage(packageStr);
-  const version = resolveVersion(_version, latestTag);
-  console.log("Installing " + version);
-
-  await installPackage(packageUrl, moduleFolder, cwd, spinner, version);
-
-  // Add to package.json
-  spinner.updateMessage(`Adding package to ${PACKAGE_JSON_NAME}...`);
-  const packageJson = require(path.join(cwd, PACKAGE_JSON_NAME));
-  packageJson.dependencies = packageJson.dependencies || {};
-  // Specify the package version and url
-  packageJson.dependencies[repoName] = {
-    version: version,
-    url: packageUrl,
-  };
-  fs.writeFileSync(
-    path.join(cwd, PACKAGE_JSON_NAME),
-    JSON.stringify(packageJson, null, 2)
-  );
 }
 
 async function installPackage(
@@ -196,7 +208,12 @@ async function getUpdates(
       executeCommand(`git`, ["pull"], { cwd: packagePath });
       // Check if package has newer tag
       const latestTag = getLatestTag(packageUrl);
-      if (latestTag !== version) {
+      const defaultBranch = getDefaultBranch(packageUrl);
+      if (
+        latestTag != null &&
+        version != defaultBranch &&
+        latestTag !== version
+      ) {
         // Check if new tag is a major upgrade
         const majorUpgrade = latestTag.split(".")[0] !== version.split(".")[0];
         const canUpgrade = upgrade && majorUpgrade;
@@ -214,11 +231,8 @@ async function getUpdates(
     }
   }
 
-  // Efficiently update package.json
-  fs.writeFileSync(
-    path.join(cwd, PACKAGE_JSON_NAME),
-    JSON.stringify(packageJson, null, 2)
-  );
+  // Efficiently update PACKAGE_JSON_NAME
+  writePackageFile(packageJson);
 
   spinner.updateMessage(
     `Packages up to date, ${updatable.length} can be upgraded.`
@@ -244,6 +258,7 @@ export default async function main() {
   const version = args.includes("--version");
 
   initMessage(VERSION);
+  await verifyInstallationPath();
   if (!version) await updater(debugMode, VERSION);
 
   // If user ran clockwork --version
@@ -264,7 +279,7 @@ export default async function main() {
       await addPackage(repo, moduleFolder, cwd, spinner);
     }
 
-    // Check if there are any updates for packages in package.json
+    // Check if there are any updates for packages in PACKAGE_JSON_NAME
     const packageJson = require(path.join(cwd, PACKAGE_JSON_NAME));
     const pkgs = Object.values(packageJson.dependencies || {});
     await getUpdates(pkgs, moduleFolder, cwd, packageJson);
@@ -276,13 +291,13 @@ export default async function main() {
       errors.notInitialized();
       return;
     }
-    // Check if there are any updates for packages in package.json
-    const packageJson = require(path.join(cwd, PACKAGE_JSON_NAME));
+    // Check if there are any updates for packages in PACKAGE_JSON_NAME
+    const packageJson = readPackageFile();
     const pkgs = Object.values(packageJson.dependencies || {});
     await getUpdates(pkgs, moduleFolder, cwd, packageJson, true);
     return;
   } else if (isCommand(commands.add)) {
-    // Check if package.json exists
+    // Check if PACKAGE_JSON_NAME exists
     if (!fs.existsSync(path.join(cwd, PACKAGE_JSON_NAME))) {
       errors.notInitialized();
       return;
@@ -335,10 +350,7 @@ export default async function main() {
       version: "1.0.0",
       description: "",
     };
-    fs.writeFileSync(
-      path.join(cwd, PACKAGE_JSON_NAME),
-      JSON.stringify(packageJson, null, 2)
-    );
+    writePackageFile(packageJson);
     spinner.stop();
   } else {
     console.log("Usage: clockwork <command>");

@@ -1,0 +1,23 @@
+import { Callout, Steps } from "nextra/components";
+
+# Installing Packages
+
+### Install a manifest package
+
+A [manifest package](/developers/manifest) is a package that is listed in the [`manifest.yml`](https://github.com/Turtlepaw/clockwork/blob/main/manifest.yml). To install a manifest package, run the following command:
+
+```shell
+clockwork install <package-name>
+```
+
+### Install a package from git
+
+```shell
+clockwork install <git-url>
+```
+
+<Callout type="warning">
+  Packages installed from git are not verified by Clockwork and do not meet [our
+  requirements](/developers/manifest#requirements-for-a-package-to-be-added-to-the-manifest),
+  install at your own risk.
+</Callout>

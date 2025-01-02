@@ -1,5 +1,11 @@
 {
   "name": "wf",
   "version": "1.0.0",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "xml-preprocessor": {
+      "version": "main",
+      "url": "https://github.com/Turtlepaw/xml-preprocessor.git"
+    }
+  }
 }

@@ -13,16 +13,26 @@ const repoOwner = "Turtlepaw";
 const repoName = "clockwork";
 const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/releases/latest`;
 
+export interface Spinner {
+  stop: (isSuccess?: boolean) => void;
+  updateMessage: (message: string) => void;
+  pause: () => void;
+  resume: () => void;
+}
+
 // Custom spinner function
-export async function progressIndicator(taskName: string) {
+export async function progressIndicator(taskName: string): Promise<Spinner> {
   const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
   let frameIndex = 0;
   let intervalId: NodeJS.Timeout;
+  let isPaused = false;
 
   // Function to animate the spinner
   const animate = () => {
-    process.stdout.write(`\r${chalk.cyan(frames[frameIndex])} ${taskName}`); // Overwrite the line with each frame
-    frameIndex = (frameIndex + 1) % frames.length; // Cycle through frames
+    if (!isPaused) {
+      process.stdout.write(`\r${chalk.cyan(frames[frameIndex])} ${taskName}`); // Overwrite the line with each frame
+      frameIndex = (frameIndex + 1) % frames.length; // Cycle through frames
+    }
   };
 
   // Start the spinner
@@ -43,27 +53,62 @@ export async function progressIndicator(taskName: string) {
     intervalId = setInterval(animate, 80);
   }
 
+  // Function to pause the spinner
+  function pause() {
+    isPaused = true;
+    process.stdout.write(`\r`);
+  }
+
+  // Function to resume the spinner
+  function resume() {
+    isPaused = false;
+    intervalId = setInterval(animate, 80);
+  }
+
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  // Return stop method for external usage
-  return { stop, updateMessage };
+  // Return control methods for external usage
+  return { stop, updateMessage, pause, resume };
+}
+
+export async function verifyInstallationPath() {
+  try {
+    await getBinaryPath();
+  } catch (error: any) {
+    console.log(error);
+    console.error(chalk.red("Failed to resolve the installation path"));
+    console.log(
+      chalk.yellow(
+        "• Verify that the CLOCKWORK_HOME environment variable is set and available."
+      )
+    );
+    process.exit(1);
+  }
 }
 
 /**
  * Determine the full path of the current binary.
- *
+ * Uses the CLOCKWORK_HOME environment variable if set.
+ * Otherwise, defaults to:
  * Linux and MacOS - "/usr/local/bin/clockwork"
  * Windows - "C:\\Users\\user\\Clockwork"
  */
-function getBinaryPath() {
+async function getBinaryPath() {
   const platform = process.platform;
-  let binaryPath = "";
+  let binaryPath = process.env.CLOCKWORK_HOME;
 
-  if (platform === "win32") {
-    const userHome = process.env.USERPROFILE || "C:\\Users\\user";
-    binaryPath = path.join(userHome, "Clockwork");
-  } else {
-    binaryPath = path.join("/", "usr", "local", "bin");
+  // Fail by default
+  if (!binaryPath) {
+    throw new Error("CLOCKWORK_HOME environment variable not set.");
+  }
+
+  if (!binaryPath) {
+    if (platform === "win32") {
+      const userHome = process.env.USERPROFILE || "C:\\Users\\user";
+      binaryPath = path.join(userHome, "Clockwork");
+    } else {
+      binaryPath = path.join("/", "usr", "local", "bin");
+    }
   }
 
   return binaryPath;
@@ -269,7 +314,7 @@ function replaceBinary(
 }
 
 export async function updater(debugMode: boolean, VERSION: string) {
-  const binaryPath = getBinaryPath();
+  const binaryPath = await getBinaryPath();
   const _buildDownloadDirectory = ".wff-build-script/downloads";
   const buildDownloadsDirectory = path.resolve(
     path.join(binaryPath, _buildDownloadDirectory)

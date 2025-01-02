@@ -1,0 +1,60 @@
+import { Callout, Steps } from "nextra/components";
+
+# Installation
+
+Installing Clockwork is quick and easy, and should take less than a few seconds. The install script is the fastest way to set it up, it handles downloading the binary for your platform and adding it to the path.
+
+### Windows
+
+Run this command in Powershell:
+
+```shell copy
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1 -UseBasicParsing | Invoke-Expression
+```
+
+### Linux/MacOS
+
+```shell
+curl -s https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.sh | sudo bash
+```
+
+<Callout type="info">
+  This script will download the latest release of Clockwork and add it to your
+  path.
+</Callout>
+<Callout type="info">
+  Manual installation of files in `wff-build-tools` is no longer required
+</Callout>
+
+## Download locations
+
+| Operating System  | Path                      |
+| :---------------- | :------------------------ |
+| Microsoft Windows | `%USERPROFILE%\Clockwork` |
+| Linux             | `/usr/local/bin`          |
+
+<Callout type="warning">
+  Mac OS is currently not *officially* supported, but you may be able to use the
+  Linux script.
+</Callout>
+
+## Uninstalling Clockwork
+
+We're sad to see you go, if you have encountered any issues, please open an issue.
+
+<Steps>
+### Delete the installation folder
+```shell
+rm -rf "$CLOCKWORK_HOME"
+```
+
+### Remove environment variables
+
+Clockwork sets 2 environment variables:
+
+- `CLOCKWORK_HOME`
+- `CLOCKWORK_VERSION`
+
+You will have to remove them manually.
+
+</Steps>

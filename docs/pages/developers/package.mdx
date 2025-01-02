@@ -1,0 +1,22 @@
+import { LinkButton } from "@/components/Button";
+import { Github } from "lucide-react";
+import { Callout, Steps } from "nextra/components";
+
+# Clockwork.yml
+
+Clockwork.yml is a file that contains metadata about a package.
+
+## Example
+
+```yaml copy filename="clockwork.yml"
+name: my-package
+description: My awesome clockwork package
+version: 1.0.0 # github release tag
+# Watch Face Format version required
+watchFaceFormatVersion: 2 # or unspecified for any version
+```
+
+<Callout type="warning">
+  The clockwork package file must be named `clockwork.yml` (`clockwork.yaml`
+  will be ignored).
+</Callout>

@@ -6,6 +6,9 @@
   "author": "https://github.com/gondwanasoft",
   "license": "MIT",
   "private": true,
+  "workspaces": [
+    "docs"
+  ],
   "scripts": {
     "compile": "tsc -p ./scripts/tsconfig.json",
     "build": "yarn compile && yarn bundle && yarn postbuild && yarn pkg",

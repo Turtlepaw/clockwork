@@ -1,0 +1,28 @@
+import { LinkButton } from "@/components/Button";
+import { Github } from "lucide-react";
+import { Cards } from "nextra/components";
+
+# Clockwork
+
+The open-source CLI for Watch Face Format (WFF) projects
+
+## Features
+
+<Cards
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+    gap: "1rem",
+  }}
+>
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">download</span>}
+    title="Download reusable WFF components"
+    href="/guides/packages"
+  />
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">build</span>}
+    title="Easily build and install your watch face"
+    href="/guides/building"
+  />
+</Cards>

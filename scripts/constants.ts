@@ -1,1 +1,1 @@
-export const PACKAGE_JSON_NAME = "clockwork.json";
+export const PACKAGE_JSON_NAME = "clockwork.yml";
