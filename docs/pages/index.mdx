@@ -2,7 +2,6 @@ import { LinkButton } from "@/components/Button";
 import { Github } from "lucide-react";
 import { Cards } from "nextra/components";
 
-<MDXProvider components={{ h1: (props) => <HeadingWithLink level={1} {...props} /> }}>
   <div
     style={{
       flex: 1,
@@ -23,22 +22,22 @@ import { Cards } from "nextra/components";
 
 ## Features
 
-  <Cards
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-      gap: "1rem",
-    }}
-  >
-    <Cards.Card
-      icon={<span class="material-symbols-rounded">download</span>}
-      title="Download reusable WFF components"
-      href="/guides/packages"
-    />
-    <Cards.Card
-      icon={<span class="material-symbols-rounded">build</span>}
-      title="Easily build and install your watch face"
-      href="/guides/creating"
-    />
-  </Cards>
-</MDXProvider>
+{" "}
+<Cards
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+    gap: "1rem",
+  }}
+>
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">download</span>}
+    title="Download reusable WFF components"
+    href="/guides/packages"
+  />
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">build</span>}
+    title="Easily build and install your watch face"
+    href="/guides/creating"
+  />
+</Cards>
