@@ -2,66 +2,11 @@
 
 # Clockwork
 
-Clockwork is an open-source package manager for [Google-Samsung Watch Face Format (WFF)](https://developer.android.com/training/wearables/wff) projects. It can download reusable WFF components and build your watch face.
-
-## Prerequisites
-
-This script has only been tested in conjunction with an [_Android Studio_](https://developer.android.com/studio/intro) installation. _Android Studio_ provides an XML editor, Java, gradle, ADB, AVD and command line. If you don't want to use _Android Studio_, you'll need to set up a development environment that provides those capabilities.
-
-The script assumes WFF Version 2, and has been tested with SDK 33 and 34 on Wear OS 4 and 5.
-
-You'll need a WFF project folder and files. If you haven't already got one, here are some ways of starting:
-
-- Google's [instructions](https://developer.android.com/training/wearables/wff/setup).
-
-- Google's [samples](https://github.com/android/wear-os-samples/tree/main/WatchFaceFormat).
-
-- Adapt the [WFF Boilerplate repository](https://github.com/gondwanasoft/wff-boilerplate).
-
-- [Samsung's Watch Face Studio](https://developer.samsung.com/watch-face-studio/overview.html). You can extract most files that you need from a `.wfs` file:
-  - 'Publish' the project in WFS.
-  - Find the resulting `.aab` file in `build\[project]`.
-  - Append `.zip` to the `.aab` file's name.
-  - From the `.zip`, copy `base\res\raw\watchface.xml`.
-  - From the `.zip`, copy necessary resources (_eg_, images) from `base\res\drawable-nodpi-v4`.
-  - Copy or create other essential files. If in doubt, refer to the sources above.
-  - Restore the `.aab` file's name by removing the `.zip`.
-  - Use a code editor to reformat `watchface.xml` to make it easier to read.
+Clockwork is an open-source package manager for [Google-Samsung Watch Face Format (WFF)](https://developer.android.com/training/wearables/wff) projects. It can download reusable WFF components and build your watch face
 
 ## Installation
 
-The install file is the fastest way to setup clockwork, it handles downloading the binary for your platform and adding it to the path.
-
-### Windows
-
-```shell
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1 -UseBasicParsing | Invoke-Expression
-```
-
-### Linux/MacOS
-
-```shell
-curl -s https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.sh | sudo bash
-```
-
-> [!NOTE]
-> Manual installation of files in `wff-build-tools` is no longer required
-
-## Usage
-
-### Add a repository
-
-Clockwork will run
-
-```shell
-clockwork add <repo-url>
-```
-
-```shell
-clockwork install
-```
-
-## Building your watch face with Clockwork
+[]
 
 ### Features
 

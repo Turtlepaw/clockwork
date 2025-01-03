@@ -1,0 +1,32 @@
+import { Callout, Steps } from "nextra/components";
+
+# Creating a watch face
+
+<Steps>
+### Create a new project
+You can follow [Android's official guide](https://developer.android.com/training/wearables/wff/setup) to setup your new project.
+
+### Initialize it as clockwork project
+
+```shell
+clockwork init
+```
+
+<Callout type="info">
+  You can now [add packages](/guides/packages) to your project.
+</Callout>
+
+### Build and install your watch face
+
+This will preprocess (if [XML Preprocessor](https://github.com/gondwanasoft/xml-preprocessor) is installed) your watch face, build it using gradlew, and install it to a connected device.
+
+```shell
+clockwork build
+```
+
+<Callout type="info">
+  If you have multiple devices connected, Clockwork will prompt you to select a
+  device.
+</Callout>
+
+</Steps>

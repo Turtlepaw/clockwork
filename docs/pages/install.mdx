@@ -1,4 +1,6 @@
-import { Callout, Steps } from "nextra/components";
+import { Callout, Steps, Tabs } from "nextra/components";
+import {} from "nextra/mdx";
+import { Beta } from "@/components/beta";
 
 # Installation
 
@@ -6,21 +8,28 @@ Installing Clockwork is quick and easy, and should take less than a few seconds.
 
 ### Windows
 
-Run this command in Powershell:
+Run this command in Powershell (as Administrator):
 
 ```shell copy
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1 -UseBasicParsing | Invoke-Expression"
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1 -UseBasicParsing | Invoke-Expression
 ```
 
-<Callout type="info">
-  You can set a custom installation path by appending the path to the script, like:
+<Callout type="warning">
+  You must run the script as Administrator or it will fail.
+</Callout>
+
+<Beta>Custom Installation Path</Beta>
+
+You can set a custom installation, replacing `C:\Your\Desired\Path` with your desired path:
 
 ```shell copy
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1 -UseBasicParsing | Invoke-Expression -ArgumentList "-installPath 'C:\CustomPath'"
+$scriptContent = (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/install/install.ps1" -UseBasicParsing).Content
+Invoke-Command -ScriptBlock ([ScriptBlock]::Create($scriptContent)) -ArgumentList @("C:\Your\Desired\Path")
 ```
 
-It's highly recommended to use the default path as there may be issues with the script if you use a custom path.
-
+<Callout type="warning">
+  It's highly recommended to use the default path as there may be issues with
+  the script if you use a custom path.
 </Callout>
 
 ### Linux/MacOS
@@ -37,7 +46,7 @@ curl -s https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/in
   Manual installation of files in `wff-build-tools` is no longer required
 </Callout>
 
-## Download locations
+## Default Download Locations
 
 | Operating System  | Path                      |
 | :---------------- | :------------------------ |
@@ -55,9 +64,18 @@ We're sad to see you go, if you have encountered any issues, please open an issu
 
 <Steps>
 ### Delete the installation folder
-```shell
+<Tabs items={['Windows', 'Linux']}>
+  <Tabs.Tab>
+  ```shell
+rm "$CLOCKWORK_HOME"
+```
+</Tabs.Tab>
+  <Tabs.Tab>
+    ```shell
 rm -rf "$CLOCKWORK_HOME"
 ```
+</Tabs.Tab>
+</Tabs>
 
 ### Remove environment variables
 
@@ -66,6 +84,6 @@ Clockwork sets 2 environment variables:
 - `CLOCKWORK_HOME`
 - `PATH`
 
-You will have to remove/modify them manually.
+You will have to remove/modify them manually. An easy way to edit environment variables on Windows is [Microsoft Powertoys](https://learn.microsoft.com/en-us/windows/powertoys/#environment-variables).
 
 </Steps>

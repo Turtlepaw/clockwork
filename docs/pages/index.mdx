@@ -1,32 +1,45 @@
 import { LinkButton } from "@/components/Button";
 import { Github } from "lucide-react";
 import { Cards } from "nextra/components";
+import { HeadingWithLink } from "@/components/HeadingWithLink";
 
-<div align="start">
-  <img src="/clockwork_banner.png" style={{ padding: 50 }} />
-</div>
+<MDXProvider components={{ h1: (props) => <HeadingWithLink level={1} {...props} /> }}>
+  <div
+    style={{
+      flex: 1,
+      display: "flex",
+      alignItems: "center",
+      alignContent: "center",
+      justifyContent: "center",
+      flexDirection: "column",
+    }}
+  >
+    <img src="/clockwork_icon.png" width={80} />
 
-# Clockwork
+    <h1>Clockwork</h1>
 
-The open-source CLI for Watch Face Format (WFF) projects
+    The open-source CLI and package manager for Watch Face Format projects
+
+  </div>
 
 ## Features
 
-<Cards
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-    gap: "1rem",
-  }}
->
-  <Cards.Card
-    icon={<span class="material-symbols-rounded">download</span>}
-    title="Download reusable WFF components"
-    href="/guides/packages"
-  />
-  <Cards.Card
-    icon={<span class="material-symbols-rounded">build</span>}
-    title="Easily build and install your watch face"
-    href="/guides/building"
-  />
-</Cards>
+  <Cards
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+      gap: "1rem",
+    }}
+  >
+    <Cards.Card
+      icon={<span class="material-symbols-rounded">download</span>}
+      title="Download reusable WFF components"
+      href="/guides/packages"
+    />
+    <Cards.Card
+      icon={<span class="material-symbols-rounded">build</span>}
+      title="Easily build and install your watch face"
+      href="/guides/creating"
+    />
+  </Cards>
+</MDXProvider>

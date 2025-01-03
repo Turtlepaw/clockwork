@@ -1,6 +1,6 @@
 const page = {
   packages: "Installing Packages",
-  building: "Building your Watch Face",
+  creating: "Creating a watch face",
 };
 
 export default page;
