@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mdx-js/react": "^3.1.0",
     "clsx": "^2.0.0",
     "framer-motion": "^11.0.0",
     "katex": "^0.16.19",
