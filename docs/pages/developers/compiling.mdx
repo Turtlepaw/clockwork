@@ -5,7 +5,7 @@ import { LinkButton } from "@/components/Button";
 
 <Steps>
   ### Install Node.js and Yarn
-  Node.js 20 or higher, and Yarn 4 or higher is required to compile Clockwork.
+  Node.js 20 or higher, and Yarn 4.6 is required to compile Clockwork.
 
 {" "}
 
@@ -49,3 +49,16 @@ Clockwork is now compiled and ready to use. There will be 3 executables generate
 - `clockwork-linux`
 
 </Steps>
+
+## What happens when you run `yarn build`?
+
+1. Compiles all the Typescript files in `./scripts` to Javascript files in `./build/scripts`
+2. Bundles all the compiled javascript files and dependencies into `index.js`
+3. Injects the current version found in `./package.json` into `./build/index.js`
+4. Packages Node.js and `./build/index.js` into an executable for Linux, Mac OS, and Windows
+
+This makes it work on devices even without Node.js installed!
+
+##### Testing the auto updater
+
+If you need to test the auto updater, temporarily set the `version` in `package.json` to something lower and recompile the executables, the version set in `package.json` will automatically be injected into the compiled javascript.
