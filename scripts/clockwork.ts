@@ -98,7 +98,7 @@ async function addPackage(
       packageStr = packageInfo.url;
     }
 
-    let latestTag = getLatestTag(packageStr);
+    let latestTag = await getLatestTag(packageStr);
     if (!latestTag) {
       spinner.pause();
       const answer = await inquirer.prompt([
@@ -117,7 +117,7 @@ async function addPackage(
         return;
       }
 
-      latestTag = getDefaultBranch(packageStr);
+      latestTag = await getDefaultBranch(packageStr);
     }
 
     const {
@@ -207,8 +207,8 @@ async function getUpdates(
       // Pull the latest changes for the specified package
       executeCommand(`git`, ["pull"], { cwd: packagePath });
       // Check if package has newer tag
-      const latestTag = getLatestTag(packageUrl);
-      const defaultBranch = getDefaultBranch(packageUrl);
+      const latestTag = await getLatestTag(packageUrl);
+      const defaultBranch = await getDefaultBranch(packageUrl);
       if (
         latestTag != null &&
         version != defaultBranch &&

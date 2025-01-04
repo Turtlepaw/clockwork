@@ -40,6 +40,7 @@ export async function progressIndicator(taskName: string): Promise<Spinner> {
 
   // Stop method
   function stop(isSuccess = true) {
+    isPaused = true;
     clearInterval(intervalId); // Stop the spinner
     process.stdout.write(
       `\r${isSuccess ? chalk.green("✓") : chalk.red("✘")} ${taskName}\n`
@@ -93,7 +94,7 @@ export async function verifyInstallationPath() {
  * Linux and MacOS - "/usr/local/bin/clockwork"
  * Windows - "C:\\Users\\user\\Clockwork"
  */
-async function getBinaryPath() {
+export async function getBinaryPath() {
   const platform = process.platform;
   let binaryPath = process.env.CLOCKWORK_HOME;
 

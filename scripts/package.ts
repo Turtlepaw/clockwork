@@ -37,17 +37,15 @@ export function parseDependency(pkg: any): ParsedPackage {
 }
 
 export function getPackages(): GetPackages {
-  const packageJson = require(path.join(process.cwd(), PACKAGE_JSON_NAME));
+  const packageJson = readPackageFile();
   const packages: ParsedPackage[] = packageJson.dependencies
     ? Object.values(packageJson.dependencies).map((pkg: unknown) =>
-        parsePackage(pkg as string)
+        parseDependency(pkg as string)
       )
     : [];
   return {
     packages,
     isPackageInstalled: (pkgName: string) => {
-      console.log("pkgName", pkgName);
-      console.log(packages, packageJson);
       return packages.some((pkg) => pkg.repoName === pkgName);
     },
     getPackagePath: (pkgName: string) =>
@@ -58,10 +56,12 @@ export function getPackages(): GetPackages {
 /**
  * Gets the latest tag from a git repository
  */
-export function getLatestTag(repoUrl: string): string | null {
+export async function getLatestTag(repoUrl: string): Promise<string | null> {
   try {
-    const tags = executeCommand(`git`, ["ls-remote", "--tags", repoUrl])
-      .stdout.toString()
+    const tags = (
+      await executeCommand(`git`, ["ls-remote", "--tags", repoUrl])
+    ).stdout
+      .toString()
       .split("\n")
       .map((line) => line.split("/").pop())
       .filter((tag) => tag)
@@ -75,15 +75,12 @@ export function getLatestTag(repoUrl: string): string | null {
 }
 
 // Function to get the default branch of a repository
-export function getDefaultBranch(repoUrl: string): string {
+export async function getDefaultBranch(repoUrl: string): Promise<string> {
   try {
-    const output = executeCommand(`git`, [
-      "ls-remote",
-      "--symref",
-      repoUrl,
-      "HEAD",
-    ])
-      .stdout.toString()
+    const output = (
+      await executeCommand(`git`, ["ls-remote", "--symref", repoUrl, "HEAD"])
+    ).stdout
+      .toString()
       .split("\n")
       .find((line) => line.includes("ref: refs/heads/"))
       ?.split(" ")

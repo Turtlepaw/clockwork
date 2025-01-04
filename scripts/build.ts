@@ -4,8 +4,14 @@ import * as fs from "fs";
 import * as path from "path";
 import inquirer from "inquirer";
 import chalk from "chalk"; // For colored text
-import { initMessage, progressIndicator, updater } from "./utils";
-import { getPackages } from "./package";
+import {
+  getBinaryPath,
+  initMessage,
+  progressIndicator,
+  updater,
+} from "./utils";
+import { getPackages, readPackageFile } from "./package";
+import { downloadFile, executeCommand } from "./command";
 
 // get version from package.json
 const VERSION = "__VERSION__";
@@ -30,8 +36,6 @@ export default async function main() {
     await new Promise((resolve) => setTimeout(resolve, 5000));
     spinner.stop(true);
   }
-
-  initMessage(VERSION);
 
   // Determine watchface ID
   if (!watchFaceId) {
@@ -75,6 +79,14 @@ export default async function main() {
     console.log(`adbExe: ${adbExe}`);
   }
 
+  const packageFile = readPackageFile();
+  if (packageFile.watchFaceFormatVersion == null)
+    console.log(
+      chalk.yellow(
+        "Warning: watchFaceFormatVersion not set in package file. Using default version 2."
+      )
+    );
+
   const packages = getPackages();
   if (packages.isPackageInstalled("xml-preprocessor")) {
     // Preprocessing
@@ -83,66 +95,43 @@ export default async function main() {
       "preprocess.py"
     );
     if (!fs.existsSync(preprocessScript)) {
-      const answer = await inquirer.prompt([
-        {
-          type: "confirm",
-          name: "download-preprocessor",
-          message: "Preprocessor script not found. Download now?",
-          default: false,
-        },
-      ]);
-
-      if (answer["download-preprocessor"]) {
-        const spinner = await progressIndicator(
-          "Downloading preprocessor script..."
-        );
-        try {
-          // Create dir if not exists
-          if (!fs.existsSync(path.dirname(preprocessScript))) {
-            fs.mkdirSync(path.dirname(preprocessScript), { recursive: true });
-          }
-
-          execSync(
-            `curl -o ${preprocessScript} https://raw.githubusercontent.com/gondwanasoft/xml-preprocessor/main/preprocess.py`,
-            { stdio: "inherit" }
-          );
-          spinner.stop(true);
-        } catch {
-          spinner.stop(false);
-          console.error("Download failed.");
-          process.exit(6);
-        }
-      } else {
-        console.error("Failed to find preprocess.py in module folder.");
-        process.exit(6);
-      }
+      console.error(chalk.red("Preprocessor script not found."));
+      console.error("You may need to run" + chalk.green(" clockwork install"));
+      process.exit(8);
     }
 
     const spinner = await progressIndicator("Preprocessing...");
     try {
-      execSync(
-        `python ${preprocessScript} watchface/watchface-pp.xml watchface/src/main/res/raw/watchface.xml -y ${
-          debugMode ? "-d" : ""
-        }`,
-        { stdio: "inherit" }
+      await executeCommand(
+        `python`,
+        [
+          preprocessScript,
+          "watchface/watchface-pp.xml",
+          "watchface/src/main/res/raw/watchface.xml",
+          "-y",
+          debugMode ? "-d" : "",
+        ],
+        { stdio: "inherit" },
+        spinner
       );
 
       spinner.stop(true);
-    } catch {
+    } catch (error: any) {
       spinner.stop(false);
       console.error("Preprocessor error; build stopped.");
+      console.error(error);
       process.exit(1);
     }
   } else {
     console.error(
-      chalk.yellow("Preprocessor module not installed, skipping preprocessing.")
+      chalk.yellow("Preprocessor not installed, skipping preprocessing.")
     );
   }
 
+  const buildToolsPath = path.resolve(await getBinaryPath(), "build-tools");
   // Validation
   const validatorJar = path.resolve(
-    "..",
-    "wff-build-tools",
+    buildToolsPath,
     "dwf-format-2-validator-1.0.jar"
   );
 
@@ -166,10 +155,11 @@ export default async function main() {
           fs.mkdirSync(path.dirname(validatorJar), { recursive: true });
         }
 
-        execSync(
-          `curl -L -o ${validatorJar} https://github.com/google/watchface/releases/download/latest/dwf-format-2-validator-1.0.jar`,
-          { stdio: "inherit" }
+        await downloadFile(
+          "https://github.com/google/watchface/releases/download/latest/dwf-format-2-validator-1.0.jar",
+          validatorJar
         );
+
         spinner.stop(true);
       } catch {
         spinner.stop(false);
@@ -184,22 +174,24 @@ export default async function main() {
   if (fs.existsSync(validatorJar)) {
     const spinner = await progressIndicator("Validating...");
     try {
-      execSync(
-        `"${env.JAVA_HOME}\\bin\\java" -jar "${validatorJar}" 2 watchface/src/main/res/raw/watchface.xml 2> validation.txt`,
-        { stdio: "inherit" }
-      );
-      const validationResult = fs.readFileSync("validation.txt", "utf8");
-      if (!validationResult.includes("PASSED")) {
+      const result = await executeCommand(`${env.JAVA_HOME}\\bin\\java`, [
+        "-jar",
+        validatorJar,
+        packageFile.watchFaceFormatVersion ?? "2",
+        //"2",
+        "watchface/src/main/res/raw/watchface.xml",
+      ]);
+      if (!result.output.toString().includes("PASSED")) {
         spinner.stop(false);
         console.error("Validation failed:");
-        console.log(validationResult);
+        console.log(result.output.toString());
         process.exit(3);
       }
-      fs.unlinkSync("validation.txt");
       spinner.stop(true);
-    } catch {
+    } catch (error: any) {
       spinner.stop(false);
       console.error("Validation error.");
+      console.error(error);
       process.exit(3);
     }
   } else {
@@ -207,10 +199,12 @@ export default async function main() {
   }
 
   // Build
-  console.log("Building...");
+  console.log("🛠️ Building...");
   const task = releaseMode ? "bundleRelease" : "assembleDebug";
   try {
-    execSync(`gradlew ${task}`, { stdio: "inherit" });
+    await executeCommand("gradlew", [task], {
+      stdio: "inherit",
+    });
   } catch {
     console.error("Build error!");
     process.exit(2);
@@ -219,11 +213,7 @@ export default async function main() {
   // Run separately to avoid exiting prematurely
   await (async () => {
     if (releaseMode) {
-      const memoryTool = path.resolve(
-        "..",
-        "wff-build-tools",
-        "memory-footprint.jar"
-      );
+      const memoryTool = path.resolve(buildToolsPath, "memory-footprint.jar");
 
       if (!fs.existsSync(memoryTool)) {
         const answer = await inquirer.prompt([
@@ -246,14 +236,15 @@ export default async function main() {
               fs.mkdirSync(path.dirname(memoryTool), { recursive: true });
             }
 
-            execSync(
-              `curl -L -o ${memoryTool} https://github.com/google/watchface/releases/download/latest/memory-footprint.jar`,
-              { stdio: "inherit" }
+            await downloadFile(
+              "https://github.com/google/watchface/releases/download/latest/memory-footprint.jar",
+              memoryTool
             );
             spinner.stop(true);
-          } catch {
+          } catch (error: any) {
             spinner.stop(false);
             console.error("Download failed.");
+            console.error(error);
             process.exit(6);
           }
         } else {
@@ -265,10 +256,22 @@ export default async function main() {
       const spinner = await progressIndicator("Checking memory footprint...");
 
       try {
-        execSync(
-          `"${env.JAVA_HOME}\\bin\\java" -jar "${memoryTool}" --watch-face watchface/build/outputs/bundle/release/watchface-release.aab --schema-version 2 --ambient-limit-mb 10 --active-limit-mb 100 --apply-v1-offload-limitations --estimate-optimization --report --verbose`,
-          { stdio: "inherit" }
-        );
+        await executeCommand(`${env.JAVA_HOME}\\bin\\java`, [
+          "-jar",
+          memoryTool,
+          "--watch-face",
+          "watchface/build/outputs/bundle/release/watchface-release.aab",
+          "--schema-version",
+          "2",
+          "--ambient-limit-mb",
+          "10",
+          "--active-limit-mb",
+          "100",
+          "--apply-v1-offload-limitations",
+          "--estimate-optimization",
+          "--report",
+          "--verbose",
+        ]);
         spinner.stop(true);
       } catch {
         spinner.stop(false);
@@ -278,6 +281,13 @@ export default async function main() {
     }
   })();
 
+  if (releaseMode) {
+    console.log(
+      chalk.yellow("Release builds can't be installed, skipping installation.")
+    );
+    process.exit(0);
+  }
+
   async function getDeviceInfo(deviceId: string): Promise<{
     name: string;
     model: string;
@@ -286,27 +296,51 @@ export default async function main() {
     apiLevel: string;
   } | null> {
     try {
-      const model = execSync(
-        `${adbExe} -s ${deviceId} shell getprop ro.product.model`
-      )
+      const model = (
+        await executeCommand(adbExe, [
+          "-s",
+          deviceId,
+          "shell",
+          "getprop",
+          "ro.product.model",
+        ])
+      ).stdout
         .toString()
         .trim();
 
-      const characteristics = execSync(
-        `${adbExe} -s ${deviceId} shell getprop ro.build.characteristics`
-      )
+      const characteristics = (
+        await executeCommand(adbExe, [
+          "-s",
+          deviceId,
+          "shell",
+          "getprop",
+          "ro.build.characteristics",
+        ])
+      ).stdout
         .toString()
         .trim();
 
-      const osVersion = execSync(
-        `${adbExe} -s ${deviceId} shell getprop ro.build.version.release`
-      )
+      const osVersion = (
+        await executeCommand(adbExe, [
+          "-s",
+          deviceId,
+          "shell",
+          "getprop",
+          "ro.build.version.release",
+        ])
+      ).stdout
         .toString()
         .trim();
 
-      const apiLevel = execSync(
-        `${adbExe} -s ${deviceId} shell getprop ro.build.version.sdk`
-      )
+      const apiLevel = (
+        await executeCommand(adbExe, [
+          "-s",
+          deviceId,
+          "shell",
+          "getprop",
+          "ro.build.version.sdk",
+        ])
+      ).stdout
         .toString()
         .trim();
 
@@ -325,8 +359,8 @@ export default async function main() {
   }
 
   // Installation
-  console.log("Installing...");
-  const devicesResult = execSync(`${adbExe} devices`)
+  const spinner = await progressIndicator("Installing...");
+  const devicesResult = (await executeCommand(adbExe, ["devices"])).stdout
     .toString()
     .trim()
     .split("\n")
@@ -336,7 +370,8 @@ export default async function main() {
     .map((line) => line.split("\t")[0]);
 
   if (devices.length === 0) {
-    console.error("No devices connected!");
+    spinner.updateMessage(chalk.red("No devices connected."));
+    spinner.stop(false);
     process.exit(5);
   }
 
@@ -352,9 +387,10 @@ export default async function main() {
     !allDevices &&
     compatibleDevices.every((device) => !device?.isWearOS)
   ) {
-    console.error(chalk.red("No compatible Wear OS devices found."));
+    spinner.updateMessage(chalk.red("No compatible Wear OS devices found."));
     process.exit(5);
   } else if (devices.length > 1) {
+    spinner.pause();
     const answers = await inquirer.prompt([
       {
         type: "list",
@@ -378,20 +414,37 @@ export default async function main() {
       },
     ]);
     targetDevice = answers.device;
+    spinner.resume();
   }
 
   try {
-    execSync(
-      `${adbExe} -s ${targetDevice} install watchface/build/outputs/apk/debug/watchface-debug.apk`,
-      { stdio: "inherit" }
-    );
-    execSync(
-      `${adbExe} -s ${targetDevice} shell am broadcast -a com.google.android.wearable.app.DEBUG_SURFACE --es operation set-watchface --es watchFaceId ${watchFaceId}`,
-      { stdio: "inherit" }
-    );
-    console.log("Installation complete.");
-  } catch (error) {
+    await executeCommand(adbExe, [
+      "-s",
+      targetDevice,
+      "install",
+      "watchface/build/outputs/apk/debug/watchface-debug.apk",
+    ]);
+    await executeCommand(adbExe, [
+      "-s",
+      targetDevice,
+      "shell",
+      "am",
+      "broadcast",
+      "-a",
+      "com.google.android.wearable.app.DEBUG_SURFACE",
+      "--es",
+      "operation",
+      "set-watchface",
+      "--es",
+      "watchFaceId",
+      watchFaceId,
+    ]);
+    spinner.updateMessage("Installation successful.");
+    spinner.stop(true);
+    process.exit(0);
+  } catch (error: any) {
     console.error("Installation failed.");
+    console.error(error);
     process.exit(5);
   }
 }
