@@ -4,23 +4,29 @@ import { LinkButton } from "@/components/Button";
 # Compiling Clockwork
 
 <Steps>
-  ### Install Node.js
-  Node.js 20 or higher is required to compile Clockwork.
+  ### Install Node.js and Yarn
+  Node.js 20 or higher, and Yarn 4 or higher is required to compile Clockwork.
 
 {" "}
 
 <Cards style={{ width: 280 }}>
   <Cards.Card
     icon={<span class="material-symbols-rounded">link</span>}
-    title="Ubuntu 20.04 (digitalocean)"
-    href="https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-20-04"
+    title="Install Node.js"
+    href="https://nodejs.org/en/download"
   />
   <Cards.Card
     icon={<span class="material-symbols-rounded">link</span>}
-    title="Install from nodejs.org"
-    href="https://nodejs.org/en/download"
+    title="Install Yarn"
+    href="https://yarnpkg.com/getting-started/install"
   />
 </Cards>
+
+### Clone the repository
+
+```shell
+git clone https://github.com/Turtlepaw/clockwork.git && cd clockwork
+```
 
 ### Install dependencies
 
