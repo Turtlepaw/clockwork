@@ -117,7 +117,7 @@ export function readPackageFile(): PackageFile {
  * @returns true if the file was written successfully
  */
 export function writePackageFile(input: PackageFile): boolean {
-  if (!fs.existsSync(PACKAGE_JSON_NAME)) return false;
+  //if (!fs.existsSync(PACKAGE_JSON_NAME)) return false;
 
   try {
     const dump = jsYaml.dump(input);
