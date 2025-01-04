@@ -1,6 +1,6 @@
 {
   "name": "wff-build-script",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "main": "scripts/build.js",
   "repository": "https://github.com/gondwanasoft/wff-build-script.git",
   "author": "https://github.com/gondwanasoft",
