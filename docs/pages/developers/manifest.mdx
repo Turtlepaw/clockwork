@@ -13,6 +13,15 @@ If you meet all these requirements, feel free to create a pull request.
 - The package must have a `clockwork.yml` file in the root of the repository.
 - The package's name is not already reserved in the manifest.
 
+### Example manifest format
+
+In this example, `xml-preprocessor` is the name of the package (used for installing, e.g. `clockwork add xml-preprocessor`) and `url` is the GitHub URL, which Clockwork will automatically resolve the latest version to install.
+
+```yml
+xml-preprocessor:
+  url: https://github.com/gondwanasoft/xml-preprocessor.git
+```
+
 <LinkButton
   text="View manifest.yml"
   link="https://github.com/Turtlepaw/clockwork/blob/main/manifest.yml"
