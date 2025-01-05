@@ -57,7 +57,7 @@ async function addPackage(
   moduleFolder: string,
   cwd: string,
   spinner: Spinner
-) {
+): Promise<boolean> {
   try {
     spinner.updateMessage(`Installing package...`);
 
@@ -114,7 +114,7 @@ async function addPackage(
       if (!answer.downloadSource) {
         spinner.stop(false);
         console.log(chalk.red("Installation aborted. No tags available."));
-        return;
+        return false;
       }
 
       latestTag = await getDefaultBranch(packageStr);
@@ -150,6 +150,7 @@ async function addPackage(
   } catch (err: any) {
     spinner.stop(false);
     console.error(chalk.red(`Error: ${err.message}`));
+    return process.exit(1);
   }
 }
 
@@ -201,11 +202,11 @@ async function getUpdates(
   let updatable = [];
 
   for (const pkg of pkgs) {
-    const { url: packageUrl, repoName, version } = parsePackage(pkg);
+    const { url: packageUrl, repoName, version } = parseDependency(pkg);
     const packagePath = path.join(moduleFolder, repoName);
     if (fs.existsSync(packagePath)) {
       // Pull the latest changes for the specified package
-      executeCommand(`git`, ["pull"], { cwd: packagePath });
+      await executeCommand(`git`, ["pull"], { cwd: packagePath });
       // Check if package has newer tag
       const latestTag = await getLatestTag(packageUrl);
       const defaultBranch = await getDefaultBranch(packageUrl);
@@ -220,7 +221,9 @@ async function getUpdates(
         // Set the git tag to the latest version if not major upgrade
         if (canUpgrade) {
           packageJson.dependencies[repoName].version = latestTag;
-          executeCommand(`git`, ["checkout", latestTag], { cwd: packagePath });
+          await executeCommand(`git`, ["checkout", latestTag], {
+            cwd: packagePath,
+          });
         } else {
           updatable.push(repoName);
         }
@@ -280,7 +283,7 @@ export default async function main() {
     }
 
     // Check if there are any updates for packages in PACKAGE_JSON_NAME
-    const packageJson = require(path.join(cwd, PACKAGE_JSON_NAME));
+    const packageJson = readPackageFile();
     const pkgs = Object.values(packageJson.dependencies || {});
     await getUpdates(pkgs, moduleFolder, cwd, packageJson);
 
@@ -325,7 +328,7 @@ export default async function main() {
       errors.notInitialized();
       return;
     }
-    const packageJson = require(path.join(cwd, PACKAGE_JSON_NAME));
+    const packageJson = readPackageFile();
     console.log(chalk.green.bold("Installed packages:"));
     for (const pkg of Object.values(packageJson.dependencies || {})) {
       const { repoName, version } = parseDependency(pkg);

@@ -106,6 +106,62 @@ async function findPythonPath(): Promise<string | null> {
   return null;
 }
 
+async function findGitPath(): Promise<string | null> {
+  // Try common git installation paths on Windows
+  const commonPaths =
+    process.platform === "win32"
+      ? [
+          path.join(process.env.ProgramFiles || "", "Git", "cmd", "git.exe"),
+          path.join(
+            process.env["ProgramFiles(x86)"] || "",
+            "Git",
+            "cmd",
+            "git.exe"
+          ),
+          path.join(
+            process.env.LOCALAPPDATA || "",
+            "Programs",
+            "Git",
+            "cmd",
+            "git.exe"
+          ),
+          // Add GitHub Desktop's Git path
+          path.join(
+            process.env.LOCALAPPDATA || "",
+            "GitHub",
+            "PortableGit_",
+            "cmd",
+            "git.exe"
+          ),
+        ]
+      : ["/usr/bin/git", "/usr/local/bin/git"];
+
+  for (const gitPath of commonPaths) {
+    if (fs.existsSync(gitPath)) {
+      // Return the path wrapped in quotes if it contains spaces
+      return gitPath.includes(" ") ? `"${gitPath}"` : gitPath;
+    }
+  }
+
+  // For GitHub Desktop's Git on Windows, search with wildcard
+  if (process.platform === "win32") {
+    const githubPath = path.join(process.env.LOCALAPPDATA || "", "GitHub");
+    if (fs.existsSync(githubPath)) {
+      const dirs = fs.readdirSync(githubPath);
+      for (const dir of dirs) {
+        if (dir.startsWith("PortableGit_")) {
+          const gitPath = path.join(githubPath, dir, "cmd", "git.exe");
+          if (fs.existsSync(gitPath)) {
+            return gitPath;
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function executeCommand(
   command: string,
   args: string[],
@@ -165,54 +221,54 @@ export async function executeCommand(
     PATH: systemPath,
   };
 
-  // Check if git is available in the updated PATH
-  const gitCheck = spawnSync("git", ["--version"], { env: options.env });
-  if (gitCheck.error) {
-    throw new Error(
-      "Git is not installed or not available in PATH. Please install Git and try again."
-    );
+  // Special handling for git commands
+  if (command === "git") {
+    const gitPath = await findGitPath();
+    if (gitPath) {
+      // Use the quoted path if needed
+      command = gitPath;
+      // Set shell to true for Windows to handle quoted paths
+      options.shell = process.platform === "win32";
+    } else {
+      throw new Error(
+        "Git is not installed or not found in common locations. Please install Git and try again."
+      );
+    }
   }
 
-  // Check if the command is python and verify it's available
-  if (command === "python") {
-    progressIndicator?.pause();
+  // Handle errors more gracefully
+  try {
+    const result = spawnSync(command, args, {
+      ...options,
+      shell: process.platform === "win32",
+      windowsVerbatimArguments: process.platform === "win32",
+    });
 
-    const pythonPath = await findPythonPath();
-    if (pythonPath) {
-      // Clean the path and verify it exists
-      const cleanPath = pythonPath.trim().replace(/\r$/, "");
-      if (fs.existsSync(cleanPath)) {
-        command = cleanPath;
-      } else {
-        // Fall back to embedded Python if system Python can't be found
-        command = await getEmbeddedPython(progressIndicator);
-      }
-    } else {
-      command = await getEmbeddedPython(progressIndicator);
+    // Add debug logging
+    if (result.error || result.status !== 0) {
+      console.error("Command:", command);
+      console.error("Args:", args);
+      console.error("Exit code:", result.status);
+      console.error("stderr:", result.stderr?.toString());
+      console.error("stdout:", result.stdout?.toString());
     }
 
-    progressIndicator?.resume();
-  }
+    if (result.error) {
+      throw new Error(`Command execution error: ${result.error.message}`);
+    }
+    if (result.status !== 0) {
+      const errorOutput =
+        result.stderr?.toString() ||
+        result.stdout?.toString() ||
+        "Unknown error";
+      throw new Error(`Command failed: ${errorOutput.trim()}`);
+    }
 
-  // Execute the command with shell: true on Windows to help resolve paths
-  const result = spawnSync(command, args, {
-    ...options,
-    shell: process.platform === "win32",
-    windowsVerbatimArguments: true,
-  });
-
-  if (result.error) {
-    throw result.error;
+    return result;
+  } catch (error: any) {
+    // Add more context to the error
+    throw new Error(`Failed to execute ${command}: ${error.message}`);
   }
-  if (result.status !== 0) {
-    throw new Error(
-      `Command failed: ${command} ${args.join(" ")}\n${
-        result.stderr?.toString() || ""
-      }`
-    );
-  }
-
-  return result;
 }
 
 async function getEmbeddedPython(
