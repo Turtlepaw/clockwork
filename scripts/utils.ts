@@ -7,6 +7,7 @@ import https from "https";
 import sudo from "@vscode/sudo-prompt";
 import { platform } from "os";
 import { PACKAGE_JSON_NAME } from "./constants";
+import { findPythonPath } from "./command";
 
 // GitHub API URL for the latest release
 const repoOwner = "Turtlepaw";
@@ -395,6 +396,56 @@ export async function updater(debugMode: boolean, VERSION: string) {
       error
     );
   }
+}
+
+export async function getEmbeddedPython(
+  progressIndicator: Spinner | null,
+  debugMode: boolean
+): Promise<string> {
+  // First check for system Python
+  const systemPython = await findPythonPath();
+  if (systemPython) {
+    if (debugMode) {
+      console.log(chalk.green("Using system Python:", systemPython));
+    }
+    return systemPython;
+  }
+
+  // Fall back to embedded Python if system Python not found
+  const pythonDir = path.join(await getBinaryPath(), "tools", "python");
+  const pythonExe = path.join(pythonDir, "python.exe");
+
+  if (!fs.existsSync(pythonExe)) {
+    const { downloadPython } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "downloadPython",
+        message:
+          "Python not found. Do you want to download the embedded Python?",
+        default: true,
+      },
+    ]);
+
+    progressIndicator?.resume();
+
+    if (downloadPython) {
+      progressIndicator?.updateMessage("Downloading embedded Python...");
+      const pythonVersion = "3.11.6";
+      const pythonUrl = `https://www.python.org/ftp/python/${pythonVersion}/python-${pythonVersion}-embed-amd64.zip`;
+
+      fs.mkdirSync(pythonDir, { recursive: true });
+
+      // Download and extract Python using Node.js https
+      const downloadPath = path.join(pythonDir, "python.zip");
+      await downloadFile(pythonUrl, downloadPath, debugMode);
+      execSync(`tar -xf "${downloadPath}" -C "${pythonDir}"`);
+      fs.unlinkSync(downloadPath);
+    } else {
+      throw new Error("Python not found. Aborting...");
+    }
+  }
+
+  return pythonExe;
 }
 
 export function initMessage(version: string) {

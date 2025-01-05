@@ -39,67 +39,84 @@ export async function downloadFile(
   });
 }
 
-async function findPythonPath(): Promise<string | null> {
-  // Try common commands first
-  const commands =
-    process.platform === "win32"
-      ? ["python.exe", "python3.exe"]
-      : ["python3", "python"];
-
-  for (const cmd of commands) {
+export async function findPythonPath(): Promise<string | null> {
+  if (process.platform === "win32") {
+    // First try py.exe directly
     try {
-      const result = spawnSync(cmd, ["--version"]);
-      if (result.status === 0) {
-        // Get the full path
-        const pathResult = spawnSync(
-          process.platform === "win32" ? "where" : "which",
-          [cmd]
-        );
-        if (pathResult.status === 0) {
-          // Clean up the path - remove any carriage returns or whitespace
-          return pathResult.stdout
-            .toString()
-            .trim()
-            .split("\n")[0]
-            .trim()
-            .replace(/\r$/, "");
+      const pyPath = path.join(process.env.WINDIR || "C:\\Windows", "py.exe");
+      if (fs.existsSync(pyPath)) {
+        const testResult = spawnSync(pyPath, ["--version"]);
+        if (testResult.status === 0) {
+          return pyPath;
         }
       }
     } catch {}
+
+    // Then try where.exe to find Python
+    try {
+      const whereResult = spawnSync("where", ["python"]);
+      if (whereResult.status === 0) {
+        const pythonPath = whereResult.stdout.toString().split("\n")[0].trim();
+        if (fs.existsSync(pythonPath)) {
+          const testResult = spawnSync(pythonPath, ["--version"]);
+          if (testResult.status === 0) {
+            return pythonPath;
+          }
+        }
+      }
+    } catch {}
+  } else {
+    // Unix systems
+    for (const cmd of ["python3", "python"]) {
+      try {
+        const whichResult = spawnSync("which", [cmd]);
+        if (whichResult.status === 0) {
+          const pythonPath = whichResult.stdout.toString().trim();
+          return pythonPath;
+        }
+      } catch {}
+    }
   }
 
   // Check common installation paths
   const commonPaths =
     process.platform === "win32"
       ? [
-          process.env.LOCALAPPDATA,
-          process.env.ProgramFiles,
-          process.env["ProgramFiles(x86)"],
+          path.join(
+            process.env.LOCALAPPDATA || "",
+            "Programs",
+            "Python",
+            "Python312",
+            "python.exe"
+          ),
+          path.join(
+            process.env.LOCALAPPDATA || "",
+            "Programs",
+            "Python",
+            "Python311",
+            "python.exe"
+          ),
+          path.join(process.env.ProgramFiles || "", "Python312", "python.exe"),
+          path.join(process.env.ProgramFiles || "", "Python311", "python.exe"),
+          path.join(
+            process.env["ProgramFiles(x86)"] || "",
+            "Python312",
+            "python.exe"
+          ),
+          path.join(
+            process.env["ProgramFiles(x86)"] || "",
+            "Python311",
+            "python.exe"
+          ),
         ]
-          .filter(Boolean)
-          .flatMap((base) => [
-            path.join(base!, "Python*", "python.exe"),
-            path.join(base!, "Programs", "Python*", "python.exe"),
-          ])
       : ["/usr/bin/python3", "/usr/local/bin/python3", "/usr/bin/python"];
 
   for (const pythonPath of commonPaths) {
-    if (pythonPath.includes("*")) {
-      // Handle glob patterns on Windows
-      const searchDir = path.dirname(pythonPath);
-      if (fs.existsSync(searchDir)) {
-        const dirs = fs.readdirSync(searchDir);
-        for (const dir of dirs) {
-          if (dir.startsWith("Python")) {
-            const fullPath = path.join(searchDir, dir, "python.exe");
-            if (fs.existsSync(fullPath)) {
-              return fullPath;
-            }
-          }
-        }
+    if (fs.existsSync(pythonPath)) {
+      const testResult = spawnSync(pythonPath, ["--version"]);
+      if (testResult.status === 0) {
+        return pythonPath;
       }
-    } else if (fs.existsSync(pythonPath)) {
-      return pythonPath;
     }
   }
 
@@ -269,44 +286,4 @@ export async function executeCommand(
     // Add more context to the error
     throw new Error(`Failed to execute ${command}: ${error.message}`);
   }
-}
-
-async function getEmbeddedPython(
-  progressIndicator: Spinner | null
-): Promise<string> {
-  const pythonDir = path.join(await getBinaryPath(), "tools", "python");
-  const pythonExe = path.join(pythonDir, "python.exe");
-
-  if (!fs.existsSync(pythonExe)) {
-    // Inquire
-    const { downloadPython } = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "downloadPython",
-        message:
-          "Python not found. Do you want to download the embedded Python?",
-        default: true,
-      },
-    ]);
-
-    progressIndicator?.resume();
-
-    if (downloadPython) {
-      progressIndicator?.updateMessage("Downloading embedded Python...");
-      const pythonVersion = "3.11.6";
-      const pythonUrl = `https://www.python.org/ftp/python/${pythonVersion}/python-${pythonVersion}-embed-amd64.zip`;
-
-      fs.mkdirSync(pythonDir, { recursive: true });
-
-      // Download and extract Python using Node.js https
-      const downloadPath = path.join(pythonDir, "python.zip");
-      await downloadFile(pythonUrl, downloadPath);
-      execSync(`tar -xf "${downloadPath}" -C "${pythonDir}"`);
-      fs.unlinkSync(downloadPath);
-    } else {
-      throw new Error("Python not found. Aborting...");
-    }
-  }
-
-  return pythonExe;
 }
