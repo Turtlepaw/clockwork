@@ -204,8 +204,30 @@ async function getUpdates(
   for (const pkg of pkgs) {
     const { url: packageUrl, repoName, version } = parseDependency(pkg);
     const packagePath = path.join(moduleFolder, repoName);
+
+    // Check if package exists and get its remote URL
     if (fs.existsSync(packagePath)) {
       try {
+        const currentUrl = (
+          await executeCommand(
+            "git",
+            ["config", "--get", "remote.origin.url"],
+            {
+              cwd: packagePath,
+            }
+          )
+        ).stdout
+          .toString()
+          .trim();
+
+        // If URLs don't match, remove the package and reinstall
+        if (currentUrl !== packageUrl) {
+          spinner.updateMessage(`URL changed for ${repoName}, reinstalling...`);
+          fs.rmSync(packagePath, { recursive: true, force: true });
+          await installPackage(packageUrl, moduleFolder, cwd, spinner, version);
+          continue;
+        }
+
         // First checkout the correct branch/tag
         await executeCommand(`git`, ["checkout", version], {
           cwd: packagePath,
