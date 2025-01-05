@@ -9,6 +9,7 @@ import {
   initMessage,
   progressIndicator,
   updater,
+  getEmbeddedPython,
 } from "./utils";
 import { getPackages, readPackageFile } from "./package";
 import { downloadFile, executeCommand } from "./command";
@@ -21,6 +22,33 @@ const params: Record<string, string[]> = {
   all: ["-a", "--all"],
 };
 
+async function findPreprocessedFile(): Promise<string> {
+  const commonFiles = [
+    "watchface/watchface-pp.xml",
+    "watchface-pp.xml",
+    "watchface.xml",
+  ];
+
+  const existingFiles = [];
+  for (const file of commonFiles) {
+    const exists = fs.existsSync(file);
+    if (exists) {
+      existingFiles.push(file);
+    } else continue;
+  }
+
+  if (existingFiles.length > 1) {
+  } else if (existingFiles.length <= 0) {
+    console.error(chalk.red("Failed to find an XML file to preprocess"));
+    console.debug(chalk.gray("Clockwork checked these common files:"));
+    for (const file of commonFiles) {
+      console.debug(chalk.gray(`  • `) + file);
+    }
+  }
+
+  return existingFiles[0];
+}
+
 export default async function main() {
   const env = process.env;
   let watchFaceId = env.WATCHFACE_ID;
@@ -30,11 +58,6 @@ export default async function main() {
 
   if (debugMode) {
     console.log("Debug mode enabled.");
-    // debug spinner
-    const spinner = await progressIndicator("Testing spinner...");
-    // hold for 5 seconds
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    spinner.stop(true);
   }
 
   // Determine watchface ID
@@ -102,16 +125,31 @@ export default async function main() {
 
     const spinner = await progressIndicator("Preprocessing...");
     try {
+      // Get Python executable path
+      const pythonPath = await getEmbeddedPython(spinner, debugMode);
+      if (debugMode) {
+        console.log("Using Python path:", pythonPath);
+      }
+
+      const absolutePreprocessScript = path.resolve(preprocessScript);
+
       await executeCommand(
-        `python`,
+        pythonPath,
         [
-          preprocessScript,
-          "watchface/watchface-pp.xml",
+          absolutePreprocessScript,
+          await findPreprocessedFile(),
           "watchface/src/main/res/raw/watchface.xml",
           "-y",
           debugMode ? "-d" : "",
-        ],
-        { stdio: "inherit" },
+        ].filter(Boolean),
+        {
+          stdio: "inherit",
+          env: {
+            ...process.env,
+            PYTHONIOENCODING: "utf-8",
+            PYTHONLEGACYWINDOWSFSENCODING: "1",
+          },
+        },
         spinner
       );
 
