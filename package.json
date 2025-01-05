@@ -8,7 +8,7 @@
     "https://github.com/gondwanasoft"
   ],
   "license": "MIT",
-  "private": true,
+  "private": false,
   "scripts": {
     "compile": "tsc -p ./scripts/tsconfig.json",
     "build": "yarn compile && yarn bundle && yarn postbuild && yarn pkg",
@@ -32,7 +32,6 @@
     "@vercel/ncc": "^0.38.3",
     "@yao-pkg/pkg": "^6.2.0",
     "esbuild": "^0.24.2",
-    "nexe": "^4.0.0-rc.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   },

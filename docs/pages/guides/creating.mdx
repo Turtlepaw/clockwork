@@ -1,10 +1,24 @@
-import { Callout, Steps } from "nextra/components";
+import { Callout, Steps, Cards } from "nextra/components";
 
 # Creating a watch face
 
 <Steps>
 ### Create a new project
-You can follow [Android's official guide](https://developer.android.com/training/wearables/wff/setup) to setup your new project.
+The quickest way to start building your watch face is with our [official template](https://github.com/WearOSCommunity/wf-template).
+
+<Cards style={{ width: 290 }}>
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">developer_guide</span>}
+    title="Official Template"
+    href="https://github.com/WearOSCommunity/wf-template"
+  />
+
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">android</span>}
+    title="Android's Official Instructions"
+    href="https://developer.android.com/training/wearables/wff/setup"
+  />
+</Cards>
 
 ### Initialize it as clockwork project
 
