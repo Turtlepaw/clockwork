@@ -205,28 +205,45 @@ async function getUpdates(
     const { url: packageUrl, repoName, version } = parseDependency(pkg);
     const packagePath = path.join(moduleFolder, repoName);
     if (fs.existsSync(packagePath)) {
-      // Pull the latest changes for the specified package
-      await executeCommand(`git`, ["pull"], { cwd: packagePath });
-      // Check if package has newer tag
-      const latestTag = await getLatestTag(packageUrl);
-      const defaultBranch = await getDefaultBranch(packageUrl);
-      if (
-        latestTag != null &&
-        version != defaultBranch &&
-        latestTag !== version
-      ) {
-        // Check if new tag is a major upgrade
-        const majorUpgrade = latestTag.split(".")[0] !== version.split(".")[0];
-        const canUpgrade = upgrade && majorUpgrade;
-        // Set the git tag to the latest version if not major upgrade
-        if (canUpgrade) {
-          packageJson.dependencies[repoName].version = latestTag;
-          await executeCommand(`git`, ["checkout", latestTag], {
-            cwd: packagePath,
-          });
-        } else {
-          updatable.push(repoName);
+      try {
+        // First checkout the correct branch/tag
+        await executeCommand(`git`, ["checkout", version], {
+          cwd: packagePath,
+        });
+
+        // Then fetch and pull updates
+        await executeCommand(`git`, ["fetch", "origin", version], {
+          cwd: packagePath,
+        });
+        await executeCommand(`git`, ["pull", "origin", version], {
+          cwd: packagePath,
+        });
+
+        // Check if package has newer tag
+        const latestTag = await getLatestTag(packageUrl);
+        const defaultBranch = await getDefaultBranch(packageUrl);
+        if (
+          latestTag != null &&
+          version != defaultBranch &&
+          latestTag !== version
+        ) {
+          // Check if new tag is a major upgrade
+          const majorUpgrade =
+            latestTag.split(".")[0] !== version.split(".")[0];
+          const canUpgrade = upgrade && majorUpgrade;
+          // Set the git tag to the latest version if not major upgrade
+          if (canUpgrade) {
+            packageJson.dependencies[repoName].version = latestTag;
+            await executeCommand(`git`, ["checkout", latestTag], {
+              cwd: packagePath,
+            });
+          } else {
+            updatable.push(repoName);
+          }
         }
+      } catch (error: any) {
+        console.error(`Failed to update ${repoName}:`, error.message);
+        continue; // Skip to next package if this one fails
       }
     } else {
       // If the package isn't found, install it
