@@ -51,7 +51,7 @@ const config: DocsThemeConfig = {
     //lightness: 50,
   },
   footer: {
-    content: `MIT 2024-${new Date().getFullYear()} © - Icons by [Material Symbols](https://fonts.google.com/icons)`,
+    content: `MIT 2024-${new Date().getFullYear()} © beaverfy - Icons by [Material Symbols](https://fonts.google.com/icons)`,
   },
 };
 
