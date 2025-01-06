@@ -51,11 +51,12 @@ clockwork build
 
 ### Command line options
 
-- `-d` or `--debug` debug mode: if [XML Preprocessor](https://github.com/gondwanasoft/xml-preprocessor) is being used, passes `-d` to the preprocessor for extra output and retains `watchface.xml` after building the watchface.
-
-- `-r` or `--release`: if true, will run [memory footprint evaluator](https://github.com/google/watchface/tree/main/play-validations) and `gradlew bundleRelease`.
-
-- `-a` or `-all`: allow incompatible (non Wear OS) ADB devices to be install targets
+| Option              | Description                                                                                                                                                                                      |
+| :------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-d`, `--debug`     | If [XML Preprocessor](https://github.com/gondwanasoft/xml-preprocessor) is being used, passes `-d` to the preprocessor for extra output and retains `watchface.xml` after building the watchface |
+| `-r`, `--release`   | If true, will run [memory footprint evaluator](https://github.com/google/watchface/tree/main/play-validations) and `gradlew bundleRelease`                                                       |
+| `-a`, `-all`        | Allow incompatible (non Wear OS) ADB devices to be install targets                                                                                                                               |
+| `--non-interactive` | Avoid interactive prompts                                                                                                                                                                        |
 
 ### Debugging
 

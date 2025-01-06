@@ -20,6 +20,7 @@ const params: Record<string, string[]> = {
   debug: ["-d", "--debug"],
   release: ["-r", "--release"],
   all: ["-a", "--all"],
+  nonInteractive: ["--non-interactive"],
 };
 
 async function findPreprocessedFile(): Promise<string> {
@@ -55,6 +56,9 @@ export default async function main() {
   const debugMode = process.argv.some((arg) => params.debug.includes(arg));
   const releaseMode = process.argv.some((arg) => params.release.includes(arg));
   const allDevices = process.argv.some((arg) => params.all.includes(arg));
+  const nonInteractive = process.argv.some((arg) =>
+    params.nonInteractive.includes(arg)
+  );
 
   if (debugMode) {
     console.log("Debug mode enabled.");
@@ -173,7 +177,7 @@ export default async function main() {
     "dwf-format-2-validator-1.0.jar"
   );
 
-  if (!fs.existsSync(validatorJar)) {
+  if (!fs.existsSync(validatorJar) && !nonInteractive) {
     const answer = await inquirer.prompt([
       {
         type: "confirm",
@@ -254,6 +258,10 @@ export default async function main() {
       const memoryTool = path.resolve(buildToolsPath, "memory-footprint.jar");
 
       if (!fs.existsSync(memoryTool)) {
+        if (nonInteractive) {
+          return;
+        }
+
         const answer = await inquirer.prompt([
           {
             type: "confirm",
@@ -332,6 +340,7 @@ export default async function main() {
     isWearOS: boolean;
     osVersion: string;
     apiLevel: string;
+    deviceId: string;
   } | null> {
     try {
       const model = (
@@ -389,6 +398,7 @@ export default async function main() {
         isWearOS: characteristics.includes("watch"),
         osVersion: osVersion,
         apiLevel: apiLevel,
+        deviceId: deviceId,
       };
     } catch (error) {
       console.error("Error checking device properties:", error);
@@ -418,6 +428,9 @@ export default async function main() {
       return await getDeviceInfo(device);
     })
   );
+  const onlyCompatibleDevices = compatibleDevices.filter(
+    (e) => e?.isWearOS && !allDevices
+  );
 
   let targetDevice = devices[0];
   if (
@@ -427,32 +440,39 @@ export default async function main() {
   ) {
     spinner.updateMessage(chalk.red("No compatible Wear OS devices found."));
     process.exit(5);
+  } else if (onlyCompatibleDevices.length == 1) {
+    targetDevice = onlyCompatibleDevices[0]!.deviceId;
   } else if (devices.length > 1) {
-    spinner.pause();
-    const answers = await inquirer.prompt([
-      {
-        type: "list",
-        name: "device",
-        message: "Multiple devices found. Select a device to run on:",
-        choices: devices.map((device, index) => {
-          const info = compatibleDevices[index];
-          return {
-            name: `Device ${index + 1}: ${
-              info?.name != null ? `${info?.name} (${device})` : device
-            }${info?.isWearOS ? "" : " (incompatible)"}`,
-            value: device,
-            disabled: !info?.isWearOS && !allDevices,
-            // Doesn't look good in the list
-            // description: // TODO: only show if Wear OS
-            //   info?.osVersion != null
-            //     ? `Wear OS ${info.osVersion} (API ${info.apiLevel})`
-            //     : "",
-          };
-        }),
-      },
-    ]);
-    targetDevice = answers.device;
-    spinner.resume();
+    if (nonInteractive) {
+      // Resolve the first compatible one
+      targetDevice = onlyCompatibleDevices[0]?.deviceId || devices[0];
+    } else {
+      spinner.pause();
+      const answers = await inquirer.prompt([
+        {
+          type: "list",
+          name: "device",
+          message: "Multiple devices found. Select a device to run on:",
+          choices: devices.map((device, index) => {
+            const info = compatibleDevices[index];
+            return {
+              name: `Device ${index + 1}: ${
+                info?.name != null ? `${info?.name} (${device})` : device
+              }${info?.isWearOS ? "" : " (incompatible)"}`,
+              value: device,
+              disabled: !info?.isWearOS && !allDevices,
+              // Doesn't look good in the list
+              // description: // TODO: only show if Wear OS
+              //   info?.osVersion != null
+              //     ? `Wear OS ${info.osVersion} (API ${info.apiLevel})`
+              //     : "",
+            };
+          }),
+        },
+      ]);
+      spinner.resume();
+      targetDevice = answers.device;
+    }
   }
 
   try {

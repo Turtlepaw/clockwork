@@ -50,6 +50,9 @@ const config: DocsThemeConfig = {
     saturation: 66.93,
     //lightness: 50,
   },
+  footer: {
+    content: `MIT 2024-${new Date().getFullYear()} © - Icons by [Material Symbols](https://fonts.google.com/icons)`,
+  },
 };
 
 export default config;
