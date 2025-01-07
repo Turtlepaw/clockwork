@@ -1,0 +1,30 @@
+import { Steps } from "nextra/components";
+
+# Using Clockwork with Android Studio
+
+<Steps>
+
+### Add a configuration
+
+In Android Studio, click `Add Configuration...` and then press `Edit Configurations...`
+
+![](/android-studio/add_config.png)
+
+### Add a shell script
+
+Click the `+` (plus) icon and add a `Shell Script` configuration
+
+![](/android-studio/add_script.png)
+
+### Configure the script
+
+In the script's configuration, set these values:
+
+| Parameter      | Value                                                                                              |
+| -------------- | -------------------------------------------------------------------------------------------------- |
+| Script Path    | Installation directory (see [Default Installation Directory](/install#default-download-locations)) |
+| Script options | `build --non-interactive` (see [Command Line Options](/guides/creating#command-line-options))      |
+
+![](/android-studio/config.png)
+
+</Steps>
