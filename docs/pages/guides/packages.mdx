@@ -1,4 +1,5 @@
 import { Callout, Steps } from "nextra/components";
+import { Manifest } from "@/components/manifest";
 
 # Installing Packages
 
@@ -9,6 +10,11 @@ A [manifest package](/developers/manifest) is a package that is listed in the [`
 ```shell
 clockwork install <package-name>
 ```
+
+<Callout type="info">
+  For a full list of packages in the manifest, see [Packages in the
+  manifest](#packages-in-the-manifest).
+</Callout>
 
 ### Install a package from git
 
@@ -31,3 +37,19 @@ clockwork packages
 ```
 
 This will list all packages in [`clockwork.yml`](/developers/package) and their versions.
+
+## Importing Packages
+
+Clockwork works best in combination with [XML Preprocessor](https://github.com/gondwanasoft/xml-preprocessor), so you can import components into your XML code:
+
+```xml {2}
+<WatchFace>
+  <Import href="packages/my-awesome-package/component.xml"/>
+</WatchFace>
+```
+
+In this example, we import the component from `packages`, where Clockwork stores all your downloaded packages, currently this is the only way to import components from packages, but that will change in the future. Visit XML Preprocessor's [documentation on `<Import/>`](https://github.com/gondwanasoft/xml-preprocessor?tab=readme-ov-file#import) to learn more.
+
+## Packages in the manifest
+
+<Manifest />
