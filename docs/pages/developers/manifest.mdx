@@ -1,6 +1,7 @@
 import { LinkButton } from "@/components/Button";
 import { Github } from "lucide-react";
 import { Manifest } from "@/components/manifest";
+import { Callout, Steps, Cards } from "nextra/components";
 
 # Manifest
 
@@ -9,6 +10,11 @@ The manifest is a YAML file that contains shortcuts to popular packages. It's us
 ### Packages in the manifest
 
 <Manifest />
+
+<Callout type="info">
+  The component above dynamically fetches packages from the manifest, so there's
+  no need to update the documentation when adding a package.
+</Callout>
 
 #### Requirements for a package to be added to the manifest
 
