@@ -52,22 +52,24 @@ export async function findPythonPath(): Promise<string | null> {
       }
     } catch {}
 
-    // Then try where.exe to find Python
-    try {
-      const whereResult = spawnSync("where", ["python"]);
-      if (whereResult.status === 0) {
-        const pythonPath = whereResult.stdout.toString().split("\n")[0].trim();
-        if (fs.existsSync(pythonPath)) {
-          const testResult = spawnSync(pythonPath, ["--version"]);
-          if (testResult.status === 0) {
-            return pythonPath;
+    // Try where.exe to find py or python
+    for (const cmd of ["py", "python"]) {
+      try {
+        const whereResult = spawnSync("where", [cmd]);
+        if (whereResult.status === 0) {
+          const pythonPath = whereResult.stdout.toString().split("\n")[0].trim();
+          if (fs.existsSync(pythonPath)) {
+            const testResult = spawnSync(pythonPath, ["--version"]);
+            if (testResult.status === 0) {
+              return pythonPath;
+            }
           }
         }
-      }
-    } catch {}
+      } catch {}
+    }
   } else {
-    // Unix systems
-    for (const cmd of ["python3", "python"]) {
+    // Unix systems - try newer Python versions first
+    for (const cmd of ["python3.12", "python3.11", "python3", "python"]) {
       try {
         const whichResult = spawnSync("which", [cmd]);
         if (whichResult.status === 0) {
