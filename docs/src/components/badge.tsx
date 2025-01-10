@@ -84,16 +84,18 @@ export function Badge({
                 </div>
               )}
               <p style={{ marginRight: "10px", margin: "0" }}>{leadingText}</p>
-              <div style={{ marginRight: 5 }} />
-              <p
-                style={{
-                  marginRight: "10px",
-                  margin: "0",
-                  color: styles.secondaryTextColor,
-                }}
-              >
-                {supportingText}
-              </p>
+              {supportingText && <div style={{ paddingRight: 5 }} />}
+              {supportingText && (
+                <p
+                  style={{
+                    marginRight: "10px",
+                    margin: "0",
+                    color: styles.secondaryTextColor,
+                  }}
+                >
+                  {supportingText}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -209,7 +211,7 @@ export function StarBadge() {
             }`
           : undefined
       }
-      loading={!data}
+      //loading={!data}
       icon="star"
     />
   );
