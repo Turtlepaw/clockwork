@@ -51,7 +51,7 @@ const config: DocsThemeConfig = {
     //lightness: 50,
   },
   footer: {
-    content: `Icons by Material Symbols`,
+    content: `Built by Turtlepaw. Icons by Material Symbols`,
   },
 };
 

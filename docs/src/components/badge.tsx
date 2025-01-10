@@ -1,32 +1,108 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
+import { useTheme } from "nextra-theme-docs";
+
+interface BadgeProps {
+  url?: string;
+  leadingText?: string;
+  supportingText?: string;
+  loading?: boolean;
+  icon?: string;
+}
+
+export function Badge({
+  url,
+  leadingText,
+  supportingText,
+  loading,
+  icon,
+}: BadgeProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme == "dark";
+
+  const styles = {
+    background: isDark ? "#FFFFFF10" : "#00000010",
+    borderColor: isDark ? "#FFFFFF15" : "#00000015",
+    hoverBackground: isDark ? "#FFFFFF20" : "#00000020",
+    textColor: isDark ? "#FFFFFF" : "#000000",
+    secondaryTextColor: isDark ? "#FFFFFF99" : "#00000099",
+  };
+
+  return (
+    <div style={{ display: "flex", justifyContent: "center", paddingTop: 15 }}>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: "inline-block",
+          textDecoration: "none",
+          color: styles.textColor,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            background: styles.background,
+            borderColor: styles.borderColor,
+            borderWidth: 1,
+            borderRadius: 8,
+            padding: "4px 10px",
+            maxWidth: "fit-content",
+            transition: "all 0.2s ease",
+            cursor: "pointer",
+          }}
+          onMouseOver={(e) => {
+            if (loading) return;
+            e.currentTarget.style.background = styles.hoverBackground;
+            e.currentTarget.style.transform = "translateY(-1px)";
+          }}
+          onMouseOut={(e) => {
+            if (loading) return;
+            e.currentTarget.style.background = styles.background;
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
+          onMouseDown={(e) => {
+            if (loading) return;
+            e.currentTarget.style.background = styles.hoverBackground;
+            e.currentTarget.style.transform = "translateY(1px)";
+          }}
+        >
+          {loading && <div>Loading...</div>}
+          {!loading && (
+            <div style={{ display: "flex" }}>
+              {icon && (
+                <span
+                  className="material-symbols-rounded"
+                  style={{ marginRight: 6 }}
+                >
+                  {icon}
+                </span>
+              )}
+              <p style={{ marginRight: "10px", margin: "0" }}>{leadingText}</p>
+              <div style={{ marginRight: 5 }} />
+              <p
+                style={{
+                  marginRight: "10px",
+                  margin: "0",
+                  color: styles.secondaryTextColor,
+                }}
+              >
+                {supportingText}
+              </p>
+            </div>
+          )}
+        </div>
+      </a>
+    </div>
+  );
+}
 
 export function LatestRelease() {
   const [release, setRelease] = useState<any | null>(null);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchLatestRelease = async () => {
-      try {
-        const response = await fetch(
-          "https://api.github.com/repos/turtlepaw/clockwork/releases/latest"
-        );
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-        const data = await response.json();
-        setRelease(data);
-      } catch (err: any) {
-        setError(err.message);
-      }
-    };
-
-    fetchLatestRelease();
-  }, []);
-
-  if (error) {
-    return <div>Error fetching release: {error}</div>;
-  }
 
   //@ts-expect-error intl probably doesn't need to know all formats
   const units: Record<Intl.RelativeTimeFormatUnit, number> = {
@@ -52,73 +128,86 @@ export function LatestRelease() {
         );
   }
 
+  useEffect(() => {
+    const fetchLatestRelease = async () => {
+      try {
+        const response = await fetch(
+          "https://api.github.com/repos/turtlepaw/clockwork/releases/latest"
+        );
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        setRelease(data);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+
+    fetchLatestRelease();
+  }, []);
+
+  if (error) {
+    return <div>Error fetching release: {error}</div>;
+  }
+
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        paddingTop: 15,
-      }}
-    >
-      <a
-        href={release?.html_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: "inline-block",
-          textDecoration: "none",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            background: "#FFFFFF10",
-            borderColor: "#FFFFFF15",
-            borderWidth: 1,
-            borderRadius: 8,
-            padding: "4px 10px",
-            maxWidth: "fit-content",
-            transition: "all 0.2s ease",
-            cursor: "pointer",
-          }}
-          onMouseOver={(e) => {
-            if (!release) return;
-            e.currentTarget.style.background = "#FFFFFF20";
-            e.currentTarget.style.transform = "translateY(-1px)";
-          }}
-          onMouseOut={(e) => {
-            if (!release) return;
-            e.currentTarget.style.background = "#FFFFFF10";
-            e.currentTarget.style.transform = "translateY(0)";
-          }}
-          onMouseDown={(e) => {
-            if (!release) return;
-            e.currentTarget.style.background = "#FFFFFF20";
-            e.currentTarget.style.transform = "translateY(1px)";
-          }}
-        >
-          {!release && <div>Loading release...</div>}
-          {release && (
-            <div
-              style={{
-                display: "flex",
-              }}
-            >
-              <p style={{ marginRight: "10px", margin: "0" }}>
-                v{release.tag_name}
-              </p>
-              <div style={{ marginRight: 5 }} />
-              <p
-                style={{ marginRight: "10px", margin: "0", color: "#FFFFFF99" }}
-              >
-                published {getRelativeTime(new Date(release.published_at))}
-              </p>
-            </div>
-          )}
-        </div>
-      </a>
-    </div>
+    <Badge
+      url={release?.html_url}
+      leadingText={`v${release?.tag_name}`}
+      supportingText={`published ${
+        release ? getRelativeTime(new Date(release.published_at)) : undefined
+      }`}
+      loading={!release}
+    />
+  );
+}
+
+export function StarBadge() {
+  const [data, setData] = useState<{
+    html_url?: string;
+    stargazers_count?: number;
+  } | null>(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchStars = async () => {
+      try {
+        const response = await fetch(
+          "https://api.github.com/repos/turtlepaw/clockwork"
+        );
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        setData(data);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+
+    fetchStars();
+  }, []);
+
+  if (error) {
+    return <div>Error fetching release: {error}</div>;
+  }
+
+  const formattedStargazersCount = data?.stargazers_count?.toLocaleString();
+
+  return (
+    <Badge
+      url={data?.html_url}
+      leadingText={"Star us on GitHub"}
+      supportingText={
+        typeof data?.stargazers_count == "number"
+          ? `${formattedStargazersCount} star${
+              data.stargazers_count > 1 ? "s" : ""
+            }`
+          : undefined
+      }
+      loading={!data}
+      icon="star"
+    />
   );
 }

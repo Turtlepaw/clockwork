@@ -1,7 +1,7 @@
 import { LinkButton } from "@/components/Button";
 import { Github } from "lucide-react";
-import { Cards } from "nextra/components";
-import { LatestRelease } from "@/components/badge";
+import { Cards, Image, Callout } from "nextra/components";
+import { LatestRelease, StarBadge } from "@/components/badge";
 
   <div
     style={{
@@ -22,6 +22,7 @@ import { LatestRelease } from "@/components/badge";
   </div>
    
 <LatestRelease />
+<StarBadge/>
 
 ## About
 
@@ -48,4 +49,68 @@ Clockwork is like `npm install` + `npm build` for Watch Face Format projects. It
     title="Easily build and install your watch face"
     href="/guides/creating"
   />
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">bolt</span>}
+    title="Active development"
+    href="https://github.com/Turtlepaw/clockwork/activity"
+  />
+  <Cards.Card
+    icon={<span class="material-symbols-rounded">public</span>}
+    title="Free and open-source"
+    href="https://github.com/Turtlepaw/clockwork"
+  />
 </Cards>
+
+## Overview
+
+Let's take a look at what Clockwork can do. We'll start by creating a `clockwork.yml` and downloading a few packages:
+
+```shell
+$ clockwork init
+$ clockwork install example-ui-pkg
+$ clockwork install xml-preprocessor
+```
+
+Here's the watch face component we'll be using:
+
+```xml filename="watchface-pp.xml" {3-5}
+<WatchFace>
+    <Scene>
+        <Group width="450" height="200" x="-50" y="170" name="TextGroup">
+            <Import href="packages/example-ui-pkg/text.xml" />
+        </Group>
+    </Scene>
+</WatchFace>
+```
+
+Our watch face file and packges are setup, now we can now build our watch face:
+
+```ansi
+$ clockwork build
+[36mClockwork CLI - the open-source package manager for Watch Face Format - v1.1.5-alpha.3[39m
+[32m✓[39m No updates available.
+[32m✓[39m Preprocessing...
+[32m✓[39m Validating...
+🛠️ Building...
+[32mBUILD SUCCESSFUL[39m in 1s
+31 actionable tasks: 1 executed, 30 up-to-date
+[32m✓[39m Installation successful.
+```
+
+<Callout type="info">
+  If [XML Preprocessor][1] is installed, it will process the `<Import />` and
+  compile the contents of `packages/example-ui-pkg/text.xml` into the raw
+  `watchface.xml` which will be built.
+</Callout>
+
+Now it's installed on our device and the sample component has been successfully imported. Here's a screenshot of the watch face:
+
+<Image
+  src={
+    "https://github.com/WearOSCommunity/wf-template/blob/main/screenshots/Screenshot_20250105_154833.png?raw=true"
+  }
+  width={150}
+  style={{ paddingTop: 20 }}
+/>
+
+[1]: https://github.com/gondwanasoft/xml-preprocessor
