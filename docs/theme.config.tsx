@@ -8,8 +8,8 @@ const config: DocsThemeConfig = {
     <div style={{ display: "flex", alignItems: "center" }}>
       <Image
         src="/clockwork_icon.png"
-        width={20}
-        height={20}
+        width={25}
+        height={25}
         alt="Logo"
         style={{ marginRight: 10 }}
       />
@@ -44,6 +44,9 @@ const config: DocsThemeConfig = {
   },
   backgroundColor: {
     dark: "#030b0f",
+  },
+  nextThemes: {
+    defaultTheme: "system",
   },
   color: {
     hue: 197.65,
