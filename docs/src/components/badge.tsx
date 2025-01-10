@@ -74,12 +74,14 @@ export function Badge({
           {!loading && (
             <div style={{ display: "flex" }}>
               {icon && (
-                <span
-                  className="material-symbols-rounded"
-                  style={{ marginRight: 6 }}
-                >
-                  {icon}
-                </span>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <span
+                    className="material-symbols-rounded"
+                    style={{ marginRight: 6, fontSize: 20 }} // Adjust the fontSize value as needed
+                  >
+                    {icon}
+                  </span>
+                </div>
               )}
               <p style={{ marginRight: "10px", margin: "0" }}>{leadingText}</p>
               <div style={{ marginRight: 5 }} />
@@ -159,6 +161,7 @@ export function LatestRelease() {
         release ? getRelativeTime(new Date(release.published_at)) : undefined
       }`}
       loading={!release}
+      icon="deployed_code_history"
     />
   );
 }
