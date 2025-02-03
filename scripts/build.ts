@@ -216,12 +216,12 @@ export default async function main() {
   if (fs.existsSync(validatorJar)) {
     const spinner = await progressIndicator("Validating...");
     try {
-      const result = await executeCommand(`${env.JAVA_HOME}\\bin\\java`, [
+      const javaPath = path.join(env.JAVA_HOME!, "bin", "java");
+      const result = await executeCommand(javaPath, [
         "-jar",
-        validatorJar,
+        `"${validatorJar}"`,
         packageFile.watchFaceFormatVersion ?? "2",
-        //"2",
-        "watchface/src/main/res/raw/watchface.xml",
+        `"${path.resolve("watchface/src/main/res/raw/watchface.xml")}"`,
       ]);
       if (!result.output.toString().includes("PASSED")) {
         spinner.stop(false);
@@ -302,11 +302,14 @@ export default async function main() {
       const spinner = await progressIndicator("Checking memory footprint...");
 
       try {
-        await executeCommand(`${env.JAVA_HOME}\\bin\\java`, [
+        const javaPath = path.join(env.JAVA_HOME!, "bin", "java");
+        await executeCommand(javaPath, [
           "-jar",
-          memoryTool,
+          `"${memoryTool}"`,
           "--watch-face",
-          "watchface/build/outputs/bundle/release/watchface-release.aab",
+          `"${path.resolve(
+            "watchface/build/outputs/bundle/release/watchface-release.aab"
+          )}"`,
           "--schema-version",
           "2",
           "--ambient-limit-mb",
