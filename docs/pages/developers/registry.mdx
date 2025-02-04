@@ -1,0 +1,68 @@
+import { LinkButton } from "@/components/Button";
+import { Github } from "lucide-react";
+import { Manifest } from "@/components/manifest";
+import { Callout, Steps, Cards } from "nextra/components";
+import { Badge } from "../../src/components/badge";
+
+# Registry
+
+The registry is a YAML file that contains shortcuts to popular package's git URLs. It's used by Clockwork to install packages quickly. For example, a user might run this command:
+
+```shell
+clockwork add https://github.com/WearOSCommunity/example-ui-pkg.git
+```
+
+Since that package is already in the registry, the user can run this command instead:
+
+```shell
+clockwork add example-ui-pkg
+```
+
+### Packages in the registry
+
+<Manifest />
+
+<Callout type="info">
+  The component above dynamically fetches packages from the registry, so there's
+  no need to update the documentation when adding a package.
+</Callout>
+
+#### Requirements for a package to be added to the registry
+
+If you meet all these requirements, feel free to create a pull request.
+
+- The package must be open-source
+- The package must have a Clockwork package file (`clockwork.yml`) containing metadata about the package in the root of the repository
+- The package's metadata must be accurate and fill all applicable fields
+  - e.g. if your package is a UI package, the `watchFaceFormatVersion` field must be filled
+- The package's name is not already reserved in the registry
+
+_Even if you meet all the requirements, your pull request may be rejected, but you are still **encouraged to create a pull request** if you haven't already._
+
+### Adding your package to the registry
+
+<Steps>
+### Fork and clone the repository
+[Fork](https://github.com/Turtlepaw/clockwork/fork) the repository and then clone it:
+
+```shell
+git clone <your-fork-url>
+```
+
+### Add it to `registry.yml`
+
+In this example, `xml-preprocessor` is the name of the package (used for installing, e.g. `clockwork add xml-preprocessor`) and `url` is the GitHub URL, which Clockwork will automatically resolve the latest version to install.
+
+```yml
+xml-preprocessor:
+  url: https://github.com/gondwanasoft/xml-preprocessor.git # git url to your package
+```
+
+</Steps>
+
+<Badge
+  leadingText="See registry.yml"
+  url="https://github.com/Turtlepaw/clockwork/blob/main/registry.yml"
+  supportingText="on GitHub"
+  icon="open_in_new"
+/>

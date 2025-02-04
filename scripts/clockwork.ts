@@ -20,6 +20,7 @@ import {
   parsePackage,
   readPackageFile,
   writePackageFile,
+  executePostScripts,
 } from "./package";
 import { executeCommand } from "./command";
 import { PACKAGE_JSON_NAME } from "./constants";
@@ -35,6 +36,7 @@ const commands: Record<string, string[]> = {
   init: ["init", "initialize"],
   packages: ["packages"],
   upgrade: ["upgrade"],
+  uninstall: ["uninstall", "remove"],
 };
 
 const commandInfo: Record<string, string> = {
@@ -44,6 +46,7 @@ const commandInfo: Record<string, string> = {
   init: `Initialize the ${PACKAGE_JSON_NAME} file for the project`,
   packages: "List all installed packages",
   upgrade: "Upgrade installed packages",
+  uninstall: "Uninstall a package",
 };
 
 function resolveVersion(version: string, latest: string) {
@@ -68,7 +71,7 @@ async function addPackage(
 
     if (!packageStr.startsWith("https://")) {
       const manifestUrl =
-        "https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/manifest.yml";
+        "https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/registry.yml";
 
       let manifestContent;
       try {
@@ -93,7 +96,7 @@ async function addPackage(
       const packageInfo = manifest[packageStr];
       if (!packageInfo) {
         spinner.stop(false);
-        throw new Error(`Package ${packageStr} not found in manifest.`);
+        throw new Error(`Package ${packageStr} not found in the registry.`);
       }
       packageStr = packageInfo.url;
     }
@@ -114,7 +117,7 @@ async function addPackage(
       if (!answer.downloadSource) {
         spinner.stop(false);
         console.log(chalk.red("Installation aborted. No tags available."));
-        return false;
+        process.exit(1);
       }
 
       latestTag = await getDefaultBranch(packageStr);
@@ -143,8 +146,29 @@ async function addPackage(
     pkg.dependencies[repoName] = { version, url: packageUrl };
 
     writePackageFile(pkg);
-
     spinner.stop(true);
+
+    const packageFolder = path.join(moduleFolder, repoName);
+    const packageFile = path.join(packageFolder, PACKAGE_JSON_NAME);
+    try {
+      const packageJson = readPackageFile(packageFile);
+      if (packageJson.watchFaceFormatVersion !== pkg.watchFaceFormatVersion) {
+        console.warn(
+          chalk.yellow(
+            `Package ${repoName} isn't compatible with this watch face format version.`
+          )
+        );
+      }
+
+      // Run post-install scripts
+      await executePostScripts(packageJson, "postinstall", packageFolder);
+    } catch (err: any) {
+      spinner.stop(false);
+      throw new Error(
+        `Failed to read ${packageFile}: ${err.message}\n\n💡 Are you sure it's compatible with Clockwork?`
+      );
+    }
+
     console.log(chalk.green(`Package ${repoName} added successfully.`));
     return process.exit(0);
   } catch (err: any) {
@@ -208,6 +232,8 @@ async function getUpdates(
     // Check if package exists and get its remote URL
     if (fs.existsSync(packagePath)) {
       try {
+        spinner.updateMessage(`Updating ${repoName}...`);
+
         const currentUrl = (
           await executeCommand(
             "git",
@@ -263,6 +289,33 @@ async function getUpdates(
             updatable.push(repoName);
           }
         }
+
+        const packageFile = path.join(packagePath, PACKAGE_JSON_NAME);
+        try {
+          const packageJson = readPackageFile(packageFile);
+          if (
+            packageJson.watchFaceFormatVersion !== pkg.watchFaceFormatVersion
+          ) {
+            console.warn(
+              chalk.yellow(
+                `Package ${repoName} isn't compatible with this watch face format version.`
+              )
+            );
+          }
+
+          // Run post-update scripts
+          await executePostScripts(
+            packageJson,
+            "postupdate",
+            packagePath,
+            spinner
+          );
+        } catch (err: any) {
+          spinner.stop(false);
+          throw new Error(
+            `Failed to read ${packageFile}: ${err.message}\n\n💡 Are you sure it's compatible with Clockwork?`
+          );
+        }
       } catch (error: any) {
         console.error(`Failed to update ${repoName}:`, error.message);
         continue; // Skip to next package if this one fails
@@ -280,6 +333,40 @@ async function getUpdates(
     `Packages up to date, ${updatable.length} can be upgraded.`
   );
   spinner.stop(true);
+}
+
+async function uninstallPackage(packageName: string, moduleFolder: string) {
+  const spinner = await progressIndicator(`Uninstalling package...`);
+
+  try {
+    // Read package file
+    const packageJson = readPackageFile();
+
+    if (!packageJson.dependencies || !packageJson.dependencies[packageName]) {
+      spinner.stop(false);
+      throw new Error(`Package ${packageName} is not installed.`);
+    }
+
+    // Remove package directory
+    const packagePath = path.join(moduleFolder, packageName);
+    if (fs.existsSync(packagePath)) {
+      fs.rmSync(packagePath, { recursive: true, force: true });
+    }
+
+    // Remove from dependencies
+    delete packageJson.dependencies[packageName];
+    writePackageFile(packageJson);
+
+    spinner.stop(true);
+    console.log(
+      chalk.green(`Package ${packageName} uninstalled successfully.`)
+    );
+    return true;
+  } catch (err: any) {
+    spinner.stop(false);
+    console.error(chalk.red(`Error: ${err.message}`));
+    return false;
+  }
 }
 
 function isCommand(commands: string[]): boolean {
@@ -394,6 +481,20 @@ export default async function main() {
     };
     writePackageFile(packageJson);
     spinner.stop();
+  } else if (isCommand(commands.uninstall)) {
+    if (!fs.existsSync(path.join(cwd, PACKAGE_JSON_NAME))) {
+      errors.notInitialized();
+      return;
+    }
+
+    const packageName = args[1];
+    if (!packageName) {
+      console.error(chalk.red("Please specify a package to uninstall."));
+      return;
+    }
+
+    await uninstallPackage(packageName, moduleFolder);
+    return;
   } else {
     console.log("Usage: clockwork <command>");
     console.log("Commands:");

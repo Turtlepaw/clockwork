@@ -1,6 +1,11 @@
 export interface Dependency {
-  url: string;
   version: string;
+  url: string;
+}
+
+export interface PackageScripts {
+  postinstall?: string;
+  postupdate?: string;
 }
 
 enum WatchFaceFormatVersion {
@@ -12,15 +17,15 @@ export interface PackageFile {
   /**
    * Name used to identify the project
    */
-  name?: string;
+  name: string;
   /**
    * The version of the package file
    */
-  version?: string;
+  version: string;
   /**
    * Optional description of the project
    */
-  description?: string;
+  description: string;
   /**
    * Dependencies of the project.
    */
@@ -28,5 +33,9 @@ export interface PackageFile {
   /**
    * Watch face format version. Used to ensure compatibility with dependencies.
    */
-  watchFaceFormatVersion?: WatchFaceFormatVersion;
+  watchFaceFormatVersion?: string;
+  /**
+   * Scripts to be run at various stages of the project lifecycle.
+   */
+  scripts?: PackageScripts;
 }

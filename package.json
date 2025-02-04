@@ -1,6 +1,6 @@
 {
   "name": "clockwork",
-  "version": "1.1.5-alpha.3",
+  "version": "1.1.6",
   "main": "scripts/build.js",
   "repository": "https://github.com/turtlepaw/clockwork.git",
   "author": "https://github.com/turtlepaw",
@@ -8,7 +8,6 @@
     "https://github.com/gondwanasoft"
   ],
   "license": "MIT",
-  "private": false,
   "scripts": {
     "compile": "tsc -p ./scripts/tsconfig.json",
     "build": "yarn compile && yarn bundle && yarn postbuild && yarn pkg",

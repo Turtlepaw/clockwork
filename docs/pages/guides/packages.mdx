@@ -3,17 +3,17 @@ import { Manifest } from "@/components/manifest";
 
 # Installing Packages
 
-### Install a manifest package
+### Install a package from the registry
 
-A [manifest package](/developers/manifest) is a package that is listed in the [`manifest.yml`](https://github.com/Turtlepaw/clockwork/blob/main/manifest.yml). To install a manifest package, run the following command:
+A [registry package](/developers/registry) is a package that is listed in the [`registry.yml`](https://github.com/Turtlepaw/clockwork/blob/main/registry.yml). To install a registry package, run the following command:
 
 ```shell
 clockwork install <package-name>
 ```
 
 <Callout type="info">
-  For a full list of packages in the manifest, see [Packages in the
-  manifest](#packages-in-the-manifest).
+  For a full list of packages in the registry, see [Packages in the
+  registry](#packages-in-the-registry).
 </Callout>
 
 ### Install a package from git
@@ -24,7 +24,7 @@ clockwork install <git-url>
 
 <Callout type="warning">
   Packages installed from git are not verified by Clockwork and do not meet [our
-  requirements](/developers/manifest#requirements-for-a-package-to-be-added-to-the-manifest),
+  requirements](/developers/registry#requirements-for-a-package-to-be-added-to-the-registry),
   install at your own risk.
 </Callout>
 
@@ -50,6 +50,6 @@ Clockwork works best in combination with [XML Preprocessor](https://github.com/g
 
 In this example, we import the component from `packages`, where Clockwork stores all your downloaded packages, currently this is the only way to import components from packages, but that will change in the future. Visit XML Preprocessor's [documentation on `<Import/>`](https://github.com/gondwanasoft/xml-preprocessor?tab=readme-ov-file#import) to learn more.
 
-## Packages in the manifest
+## Packages in the registry
 
 <Manifest />

@@ -1,5 +1,5 @@
 const page = {
-  manifest: "Manifest",
+  registry: "Registry",
   package: "Clockwork.yml",
   publishing: "Publishing a package",
   compiling: "Compiling Clockwork",

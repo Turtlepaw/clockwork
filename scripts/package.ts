@@ -1,10 +1,11 @@
 import path from "path";
 import { executeCommand } from "./command";
-import { PACKAGE_JSON_NAME } from "./constants";
+import { PACKAGE_JSON_NAME, PACKAGE_JSON_NAMES } from "./constants";
 import jsYaml from "js-yaml";
 import fs from "fs";
-import { progressIndicator } from "./utils";
+import { progressIndicator, Spinner } from "./utils";
 import { PackageFile } from "./types/package";
+import chalk from "chalk";
 
 export interface ParsedPackage {
   url: string;
@@ -99,13 +100,22 @@ export async function getDefaultBranch(repoUrl: string): Promise<string> {
  *
  * @returns the package info
  */
-export function readPackageFile(): PackageFile {
-  const pkgStr = fs.readFileSync(PACKAGE_JSON_NAME, "utf8");
-  try {
-    return jsYaml.load(pkgStr) as PackageFile;
-  } catch (err: any) {
-    throw new Error(`Error parsing ${PACKAGE_JSON_NAME}: ${err.message}`);
+export function readPackageFile(packageFile?: string): PackageFile {
+  const names = packageFile ? [packageFile] : PACKAGE_JSON_NAMES;
+  // Try both extensions
+  for (const filename of names) {
+    if (fs.existsSync(filename)) {
+      const pkgStr = fs.readFileSync(filename, "utf8");
+      try {
+        return jsYaml.load(pkgStr) as PackageFile;
+      } catch (err: any) {
+        throw new Error(`Error parsing ${filename}: ${err.message}`);
+      }
+    }
   }
+  throw new Error(
+    `No package file found. Expected one of: ${PACKAGE_JSON_NAMES.join(", ")}`
+  );
 }
 
 /**
@@ -122,5 +132,39 @@ export function writePackageFile(input: PackageFile): boolean {
     return true;
   } catch (err: any) {
     throw new Error(`Error writing ${PACKAGE_JSON_NAME}: ${err.message}`);
+  }
+}
+
+/**
+ * Executes post-update scripts if they exist
+ */
+export async function executePostScripts(
+  packageJson: PackageFile,
+  type: "postupdate" | "postinstall",
+  workingDir: string,
+  _spinner?: Spinner
+) {
+  const script = packageJson.scripts?.[type];
+  if (script) {
+    if (!_spinner) {
+      _spinner = await progressIndicator(`Running ${type} script...`);
+    } else {
+      _spinner.updateMessage(`Running ${type} script...`);
+    }
+
+    try {
+      const isWindows = process.platform === "win32";
+      const shell = isWindows ? "cmd" : "sh";
+      const shellFlag = isWindows ? "/c" : "-c";
+      await executeCommand(shell, [shellFlag, script], {
+        stdio: "inherit",
+        cwd: workingDir,
+      });
+    } catch (error: any) {
+      console.error(
+        chalk.red(`Error executing ${type} script:`),
+        error.message
+      );
+    }
   }
 }

@@ -41,7 +41,7 @@ export function Manifest() {
         paddingTop: 15,
       }}
     >
-      {!manifest && <div>Loading manifest...</div>}
+      {!manifest && <div>Loading registry...</div>}
       {manifest && (
         <Table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>

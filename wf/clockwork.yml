@@ -1,0 +1,7 @@
+name: wf
+version: 1.0.0
+description: ''
+dependencies:
+  example-ui-pkg:
+    version: main
+    url: https://github.com/WearOSCommunity/example-ui-pkg.git

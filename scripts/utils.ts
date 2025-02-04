@@ -470,3 +470,11 @@ export const errors = {
     return;
   },
 };
+
+export function validateClockworkPackage() {
+  const packageJsonPath = path.join(process.cwd(), PACKAGE_JSON_NAME);
+  if (!fs.existsSync(packageJsonPath)) {
+    errors.notInitialized();
+    process.exit(1);
+  }
+}

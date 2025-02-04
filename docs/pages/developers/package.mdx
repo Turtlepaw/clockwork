@@ -29,3 +29,20 @@ watchFaceFormatVersion: 2 # or unspecified for any version
 | `description`            | A short description of the package.                                                                   |
 | `version`                | The version of the package. Must be a valid GitHub release tag.                                       |
 | `watchFaceFormatVersion` | The version of Watch Face Format required to use the package. If unspecified, any version is allowed. |
+| [`scripts`](#scripts)    | Scripts to run when the package is installed or updated.                                              |
+
+## Scripts
+
+| Field         | Description                                                                  |
+| :------------ | :--------------------------------------------------------------------------- |
+| `postinstall` | Run when the package is first installed.                                     |
+| `postupdate`  | Run when the package is updated, may be run even if contents aren't updated. |
+
+#### Example
+
+```yaml copy filename="clockwork.yml"
+# ...
+scripts:
+  postinstall: echo "Package installed!"
+  postupdate: echo "Package updated!"
+```
