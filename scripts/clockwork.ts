@@ -486,6 +486,9 @@ export default async function main() {
     const spinner = await progressIndicator(
       `Initializing ${PACKAGE_JSON_NAME}...`
     );
+    // create PACKAGE_JSON_NAME
+    fs.writeFileSync(path.join(PACKAGE_JSON_NAME), "");
+
     const packageJson = {
       name: projectName,
       version: "1.0.0",
