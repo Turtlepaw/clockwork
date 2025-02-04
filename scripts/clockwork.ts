@@ -178,7 +178,7 @@ async function addPackage(
     } catch (err: any) {
       spinner.stop(false);
       throw new Error(
-        `Failed to read package file of module: ${err.message}\n\n💡 Are you sure it's compatible with Clockwork?`
+        `Failed to read module's package file: ${err.message}\n\n💡 Are you sure it's compatible with Clockwork?`
       );
     }
 
@@ -303,8 +303,8 @@ async function getUpdates(
           }
         }
 
-        const packageFile = path.join(packagePath, PACKAGE_JSON_NAME);
         try {
+          const packageFile = await validateClockworkPackage();
           const packageJson = readPackageFile(packageFile);
           if (
             packageJson.watchFaceFormatVersion !== pkg.watchFaceFormatVersion
@@ -326,7 +326,7 @@ async function getUpdates(
         } catch (err: any) {
           spinner.stop(false);
           throw new Error(
-            `Failed to read ${packageFile}: ${err.message}\n\n💡 Are you sure it's compatible with Clockwork?`
+            `Failed to read module's package file: ${err.message}\n\n💡 Are you sure it's compatible with Clockwork?`
           );
         }
       } catch (error: any) {
