@@ -459,7 +459,7 @@ export function initMessage(version: string) {
 
 export const errors = {
   notInitialized: () => {
-    console.log(chalk.red(`No ${PACKAGE_JSON_NAME} found.`));
+    console.log(chalk.red(`No package file found.`));
     console.log(
       `If ${chalk.magentaBright(
         "this directory"
@@ -471,11 +471,11 @@ export const errors = {
   },
 };
 
-export async function validateClockworkPackage() {
+export async function validateClockworkPackage(cwd?: string): Promise<string> {
   for (const filename of PACKAGE_JSON_NAMES) {
-    const packageJsonPath = path.join(process.cwd(), filename);
+    const packageJsonPath = path.join(cwd ?? process.cwd(), filename);
     if (fs.existsSync(packageJsonPath)) {
-      return;
+      return packageJsonPath;
     }
   }
 

@@ -24,7 +24,7 @@ import {
   executePostScripts,
 } from "./package";
 import { executeCommand } from "./command";
-import { PACKAGE_JSON_NAME } from "./constants";
+import { PACKAGE_JSON_NAME, PACKAGE_JSON_NAMES } from "./constants";
 import jsYaml from "js-yaml";
 import { Dependency, PackageFile } from "./types/package";
 
@@ -162,8 +162,8 @@ async function addPackage(
     spinner.stop(true);
 
     const packageFolder = path.join(moduleFolder, repoName);
-    const packageFile = path.join(packageFolder, PACKAGE_JSON_NAME);
     try {
+      const packageFile = await validateClockworkPackage(packageFolder);
       const packageJson = readPackageFile(packageFile);
       if (packageJson.watchFaceFormatVersion !== pkg.watchFaceFormatVersion) {
         console.warn(
@@ -178,7 +178,7 @@ async function addPackage(
     } catch (err: any) {
       spinner.stop(false);
       throw new Error(
-        `Failed to read ${packageFile}: ${err.message}\n\n💡 Are you sure it's compatible with Clockwork?`
+        `Failed to read package file of module: ${err.message}\n\n💡 Are you sure it's compatible with Clockwork?`
       );
     }
 
