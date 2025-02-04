@@ -125,14 +125,23 @@ export function readPackageFile(packageFile?: string): PackageFile {
  */
 export function writePackageFile(input: PackageFile): boolean {
   //if (!fs.existsSync(PACKAGE_JSON_NAME)) return false;
+  const names = PACKAGE_JSON_NAMES;
 
-  try {
-    const dump = jsYaml.dump(input);
-    fs.writeFileSync(PACKAGE_JSON_NAME, dump);
-    return true;
-  } catch (err: any) {
-    throw new Error(`Error writing ${PACKAGE_JSON_NAME}: ${err.message}`);
+  const dump = jsYaml.dump(input);
+
+  // Attempt to write to all possible filenames
+  for (const filename of names) {
+    if (fs.existsSync(filename)) {
+      try {
+        fs.writeFileSync(filename, dump);
+        return true;
+      } catch (err: any) {
+        throw new Error(`Error writing ${PACKAGE_JSON_NAME}: ${err.message}`);
+      }
+    }
   }
+
+  throw new Error(`Error writing ${PACKAGE_JSON_NAME}: No file found`);
 }
 
 /**
