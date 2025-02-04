@@ -69,40 +69,47 @@ async function addPackage(
       throw new Error("Please provide a package to add.");
     }
 
+    let latestTag;
+
     if (!packageStr.startsWith("https://")) {
-      const manifestUrl =
+      const registryUrl =
         "https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/registry.yml";
 
-      let manifestContent;
+      let registryContent;
       try {
-        const response = await fetch(manifestUrl);
+        const response = await fetch(registryUrl);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
-        manifestContent = await response.text();
+        registryContent = await response.text();
       } catch (err: any) {
         spinner.stop(false);
-        throw new Error(`Failed to fetch manifest: ${err.message}`);
+        throw new Error(`Failed to fetch registry: ${err.message}`);
       }
 
-      let manifest;
+      let registry;
       try {
-        manifest = jsYaml.load(manifestContent) as Record<string, Dependency>;
+        registry = jsYaml.load(registryContent) as Record<string, Dependency>;
       } catch (err: any) {
         spinner.stop(false);
-        throw new Error(`Error parsing manifest: ${err.message}`);
+        throw new Error(`Error parsing registry: ${err.message}`);
       }
 
-      const packageInfo = manifest[packageStr];
+      const packageInfo = registry[packageStr];
       if (!packageInfo) {
         spinner.stop(false);
-        throw new Error(`Package ${packageStr} not found in the registry.`);
+        throw new Error(
+          `Package ${packageStr} not found in the registry.\n\n💡 See https://clockwork-pkg.pages.dev/guides/packages#packages-in-the-registry for the registry\n🔗 If you meant to use a git URL, make sure it starts with "https://"`
+        );
       }
       packageStr = packageInfo.url;
+      if (packageInfo.version != null) latestTag = packageInfo.version;
     }
 
-    let latestTag = await getLatestTag(packageStr);
-    if (!latestTag) {
+    const latestGitTag = await getLatestTag(packageStr);
+    if (latestGitTag != null && latestTag == null) {
+      latestTag = latestGitTag;
+    } else if (latestGitTag == null && latestTag == null) {
       spinner.pause();
       const answer = await inquirer.prompt([
         {
@@ -121,6 +128,11 @@ async function addPackage(
       }
 
       latestTag = await getDefaultBranch(packageStr);
+    }
+
+    if (!latestTag) {
+      spinner.stop(false);
+      throw new Error("Failed to get latest tag.");
     }
 
     const {
