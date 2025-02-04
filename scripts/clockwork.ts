@@ -11,6 +11,7 @@ import {
   progressIndicator,
   Spinner,
   updater,
+  validateClockworkPackage,
   verifyInstallationPath,
 } from "./utils";
 import {
@@ -410,10 +411,7 @@ export default async function main() {
 
   // If user ran clockwork install <repo>
   if (isCommand(commands.install)) {
-    if (!fs.existsSync(path.join(cwd, PACKAGE_JSON_NAME))) {
-      errors.notInitialized();
-      return;
-    }
+    await validateClockworkPackage();
     const repo = args[1];
     const spinner = await progressIndicator(`Installing packages...`);
     if (repo) {
@@ -428,21 +426,14 @@ export default async function main() {
     spinner.stop();
     return;
   } else if (isCommand(commands.upgrade)) {
-    if (!fs.existsSync(path.join(cwd, PACKAGE_JSON_NAME))) {
-      errors.notInitialized();
-      return;
-    }
+    await validateClockworkPackage();
     // Check if there are any updates for packages in PACKAGE_JSON_NAME
     const packageJson = readPackageFile();
     const pkgs = Object.values(packageJson.dependencies || {});
     await getUpdates(pkgs, moduleFolder, cwd, packageJson, true);
     return;
   } else if (isCommand(commands.add)) {
-    // Check if PACKAGE_JSON_NAME exists
-    if (!fs.existsSync(path.join(cwd, PACKAGE_JSON_NAME))) {
-      errors.notInitialized();
-      return;
-    }
+    await validateClockworkPackage();
     // If user ran clockwork add <repo>
     const repo = args[1];
     const spinner = await progressIndicator(`Adding packages...`);
@@ -455,17 +446,11 @@ export default async function main() {
     }
     return;
   } else if (isCommand(commands.build)) {
-    if (!fs.existsSync(path.join(cwd, PACKAGE_JSON_NAME))) {
-      errors.notInitialized();
-      return;
-    }
+    await validateClockworkPackage();
     build();
     return;
   } else if (isCommand(commands.packages)) {
-    if (!fs.existsSync(path.join(cwd, PACKAGE_JSON_NAME))) {
-      errors.notInitialized();
-      return;
-    }
+    await validateClockworkPackage();
     const packageJson = readPackageFile();
     console.log(chalk.green.bold("Installed packages:"));
     for (const pkg of Object.values(packageJson.dependencies || {})) {
@@ -497,10 +482,7 @@ export default async function main() {
     writePackageFile(packageJson);
     spinner.stop();
   } else if (isCommand(commands.uninstall)) {
-    if (!fs.existsSync(path.join(cwd, PACKAGE_JSON_NAME))) {
-      errors.notInitialized();
-      return;
-    }
+    await validateClockworkPackage();
 
     const packageName = args[1];
     if (!packageName) {

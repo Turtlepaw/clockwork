@@ -6,7 +6,7 @@ import inquirer from "inquirer";
 import https from "https";
 import sudo from "@vscode/sudo-prompt";
 import { platform } from "os";
-import { PACKAGE_JSON_NAME } from "./constants";
+import { PACKAGE_JSON_NAME, PACKAGE_JSON_NAMES } from "./constants";
 import { findPythonPath } from "./command";
 
 // GitHub API URL for the latest release
@@ -471,10 +471,14 @@ export const errors = {
   },
 };
 
-export function validateClockworkPackage() {
-  const packageJsonPath = path.join(process.cwd(), PACKAGE_JSON_NAME);
-  if (!fs.existsSync(packageJsonPath)) {
-    errors.notInitialized();
-    process.exit(1);
+export async function validateClockworkPackage() {
+  for (const filename of PACKAGE_JSON_NAMES) {
+    const packageJsonPath = path.join(process.cwd(), filename);
+    if (fs.existsSync(packageJsonPath)) {
+      return;
+    }
   }
+
+  errors.notInitialized();
+  process.exit(1);
 }
