@@ -2,3 +2,5 @@ xml-preprocessor:
   url: https://github.com/gondwanasoft/xml-preprocessor.git
 example-ui-pkg:
   url: https://github.com/WearOSCommunity/example-ui-pkg.git
+wff-text-resize-pkg:
+  url: https://github.com/gondwanasoft/wff-text-resize-pkg.git
