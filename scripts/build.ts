@@ -13,6 +13,7 @@ import {
 } from "./utils";
 import { getPackages, readPackageFile } from "./package";
 import { downloadFile, executeCommand } from "./command";
+import "./extensions";
 
 // get version from package.json
 const VERSION = "__VERSION__";
@@ -217,7 +218,7 @@ export default async function main() {
     const spinner = await progressIndicator("Validating...");
     try {
       const javaPath = path.join(env.JAVA_HOME!, "bin", "java");
-      const result = await executeCommand(javaPath, [
+      const result = await executeCommand(javaPath.surround('"'), [
         "-jar",
         `"${validatorJar}"`,
         packageFile.watchFaceFormatVersion ?? "2",
@@ -303,7 +304,7 @@ export default async function main() {
 
       try {
         const javaPath = path.join(env.JAVA_HOME!, "bin", "java");
-        await executeCommand(javaPath, [
+        await executeCommand(javaPath.surround('"'), [
           "-jar",
           `"${memoryTool}"`,
           "--watch-face",
@@ -347,7 +348,7 @@ export default async function main() {
   } | null> {
     try {
       const model = (
-        await executeCommand(adbExe, [
+        await executeCommand(adbExe.surround('"'), [
           "-s",
           deviceId,
           "shell",
@@ -359,7 +360,7 @@ export default async function main() {
         .trim();
 
       const characteristics = (
-        await executeCommand(adbExe, [
+        await executeCommand(adbExe.surround('"'), [
           "-s",
           deviceId,
           "shell",
@@ -371,7 +372,7 @@ export default async function main() {
         .trim();
 
       const osVersion = (
-        await executeCommand(adbExe, [
+        await executeCommand(adbExe.surround('"'), [
           "-s",
           deviceId,
           "shell",
@@ -383,7 +384,7 @@ export default async function main() {
         .trim();
 
       const apiLevel = (
-        await executeCommand(adbExe, [
+        await executeCommand(adbExe.surround('"'), [
           "-s",
           deviceId,
           "shell",
@@ -411,7 +412,9 @@ export default async function main() {
 
   // Installation
   const spinner = await progressIndicator("Installing...");
-  const devicesResult = (await executeCommand(adbExe, ["devices"])).stdout
+  const devicesResult = (
+    await executeCommand(adbExe.surround('"'), ["devices"])
+  ).stdout
     .toString()
     .trim()
     .split("\n")
@@ -479,13 +482,13 @@ export default async function main() {
   }
 
   try {
-    await executeCommand(adbExe, [
+    await executeCommand(adbExe.surround('"'), [
       "-s",
       targetDevice,
       "install",
       "watchface/build/outputs/apk/debug/watchface-debug.apk",
     ]);
-    await executeCommand(adbExe, [
+    await executeCommand(adbExe.surround('"'), [
       "-s",
       targetDevice,
       "shell",
