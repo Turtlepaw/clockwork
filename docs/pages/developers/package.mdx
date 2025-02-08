@@ -2,13 +2,13 @@ import { LinkButton } from "@/components/Button";
 import { Github } from "lucide-react";
 import { Callout, Steps } from "nextra/components";
 
-# Clockwork.yml
+# Clockwork.yaml
 
-Clockwork.yml is a file that contains metadata about a package.
+`clockwork.yaml` is a file that contains metadata about your project.
 
 ## Example
 
-```yaml copy filename="clockwork.yml"
+```yaml copy filename="clockwork.yaml"
 name: my-package
 description: My awesome clockwork package
 version: 1.0.0 # github release tag
@@ -16,9 +16,9 @@ version: 1.0.0 # github release tag
 watchFaceFormatVersion: 2 # or unspecified for any version
 ```
 
-<Callout type="warning">
-  The clockwork package file must be named `clockwork.yml` (`clockwork.yaml`
-  will be ignored).
+<Callout type="info">
+  Starting with 1.1.6, Clockwork accepts both `clockwork.yml` and
+  `clockwork.yaml` as package files.
 </Callout>
 
 ## Fields
@@ -30,6 +30,11 @@ watchFaceFormatVersion: 2 # or unspecified for any version
 | `version`                | The version of the package. Must be a valid GitHub release tag.                                       |
 | `watchFaceFormatVersion` | The version of Watch Face Format required to use the package. If unspecified, any version is allowed. |
 | [`scripts`](#scripts)    | Scripts to run when the package is installed or updated.                                              |
+
+<Callout type="info">
+  Currently `watchFaceFormatVersion` only warns the user and doesn't prevent
+  installation of the package. This will change in the future.
+</Callout>
 
 ## Scripts
 

@@ -50,6 +50,25 @@ Clockwork works best in combination with [XML Preprocessor](https://github.com/g
 
 In this example, we import the component from `packages`, where Clockwork stores all your downloaded packages, currently this is the only way to import components from packages, but that will change in the future. Visit XML Preprocessor's [documentation on `<Import/>`](https://github.com/gondwanasoft/xml-preprocessor?tab=readme-ov-file#import) to learn more.
 
+## Updating packages
+
+You can update all your packages to minor and patch versions by running:
+
+```shell
+clockwork update
+```
+
+If you want to update your packages to major, minor, and patch versions, run:
+
+```shell
+clockwork upgrade
+```
+
+<Callout type="warning">
+  Major versions of packages may have breaking changes. Check the package's
+  documentation or changelog if you encounter issues.
+</Callout>
+
 ## Packages in the registry
 
 <Manifest />
