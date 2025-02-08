@@ -244,11 +244,11 @@ async function getUpdates(
     const { url: packageUrl, repoName, version } = parseDependency(pkg);
     const packagePath = path.join(moduleFolder, repoName);
 
-    // Check if package exists and get its remote URL
     if (fs.existsSync(packagePath)) {
       try {
         spinner.updateMessage(`Updating ${repoName}...`);
 
+        // Check if package exists and get its remote URL
         const currentUrl = (
           await executeCommand(
             "git",
@@ -269,22 +269,31 @@ async function getUpdates(
           continue;
         }
 
-        // First checkout the correct branch/tag
-        await executeCommand(`git`, ["checkout", version], {
+        // Fetch all remotes and tags first
+        await executeCommand(`git`, ["fetch", "--all", "--tags"], {
           cwd: packagePath,
         });
 
-        // Then fetch and pull updates
-        await executeCommand(`git`, ["fetch", "origin", version], {
-          cwd: packagePath,
-        });
-        await executeCommand(`git`, ["pull", "origin", version], {
-          cwd: packagePath,
-        });
-
-        // Check if package has newer tag
+        // Get latest tag before attempting checkout
         const latestTag = await getLatestTag(packageUrl);
         const defaultBranch = await getDefaultBranch(packageUrl);
+
+        // Only attempt version checkout if tag exists
+        try {
+          await executeCommand(`git`, ["checkout", version], {
+            cwd: packagePath,
+          });
+
+          await executeCommand(`git`, ["pull", "origin", version], {
+            cwd: packagePath,
+          });
+        } catch (err) {
+          spinner.updateMessage(
+            `Warning: Could not checkout version ${version} for ${repoName}, using current version`
+          );
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+
         if (
           latestTag != null &&
           version != defaultBranch &&
@@ -297,16 +306,25 @@ async function getUpdates(
           const minorUpgrade = latestMinor !== currentMinor;
           const patchUpgrade = latestPatch !== currentPatch;
 
-          // Allow minor & patch updates always, major only if upgrade is true
           const canUpgrade = majorUpgrade
             ? upgrade
             : minorUpgrade || patchUpgrade;
 
           if (canUpgrade) {
-            packageJson.dependencies[repoName].version = latestTag;
-            await executeCommand(`git`, ["checkout", latestTag], {
-              cwd: packagePath,
-            });
+            try {
+              await executeCommand(`git`, ["checkout", latestTag], {
+                cwd: packagePath,
+              });
+              packageJson.dependencies[repoName].version = latestTag;
+              spinner.updateMessage(`Updated ${repoName} to ${latestTag}`);
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            } catch (err) {
+              spinner.updateMessage(
+                `Warning: Could not upgrade ${repoName} to ${latestTag}`
+              );
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+              if (majorUpgrade) updatable.push(repoName);
+            }
           } else if (majorUpgrade) {
             updatable.push(repoName);
           }
@@ -339,8 +357,9 @@ async function getUpdates(
           );
         }
       } catch (error: any) {
-        console.error(`Failed to update ${repoName}:`, error.message);
-        continue; // Skip to next package if this one fails
+        spinner.updateMessage(`Failed to update ${repoName}: ${error.message}`);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        continue;
       }
     } else {
       // If the package isn't found, install it
@@ -352,9 +371,9 @@ async function getUpdates(
   writePackageFile(packageJson);
 
   spinner.updateMessage(
-    `Packages up to date, ${updatable.length} can be upgraded with ${chalk.blue(
-      "clockwork upgrade"
-    )}.`
+    `Packages up to date, ${
+      updatable.length
+    } can be upgraded with ${chalk.blueBright("clockwork upgrade")}.`
   );
   spinner.stop(true);
 }
