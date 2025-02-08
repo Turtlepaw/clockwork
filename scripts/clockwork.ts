@@ -37,6 +37,7 @@ const commands: Record<string, string[]> = {
   init: ["init", "initialize"],
   packages: ["packages"],
   upgrade: ["upgrade"],
+  update: ["update"],
   uninstall: ["uninstall", "remove"],
 };
 
@@ -46,8 +47,9 @@ const commandInfo: Record<string, string> = {
   build: "Build the watch face",
   init: `Initialize the ${PACKAGE_JSON_NAME} file for the project`,
   packages: "List all installed packages",
-  upgrade: "Upgrade installed packages",
+  upgrade: "Upgrade installed packages to their latest versions",
   uninstall: "Uninstall a package",
+  update: "Update installed packages",
 };
 
 function resolveVersion(version: string, latest: string) {
@@ -288,17 +290,24 @@ async function getUpdates(
           version != defaultBranch &&
           latestTag !== version
         ) {
-          // Check if new tag is a major upgrade
-          const majorUpgrade =
-            latestTag.split(".")[0] !== version.split(".")[0];
-          const canUpgrade = upgrade && majorUpgrade;
-          // Set the git tag to the latest version if not major upgrade
+          const [latestMajor, latestMinor, latestPatch] = latestTag.split(".");
+          const [currentMajor, currentMinor, currentPatch] = version.split(".");
+
+          const majorUpgrade = latestMajor !== currentMajor;
+          const minorUpgrade = latestMinor !== currentMinor;
+          const patchUpgrade = latestPatch !== currentPatch;
+
+          // Allow minor & patch updates always, major only if upgrade is true
+          const canUpgrade = majorUpgrade
+            ? upgrade
+            : minorUpgrade || patchUpgrade;
+
           if (canUpgrade) {
             packageJson.dependencies[repoName].version = latestTag;
             await executeCommand(`git`, ["checkout", latestTag], {
               cwd: packagePath,
             });
-          } else {
+          } else if (majorUpgrade) {
             updatable.push(repoName);
           }
         }
@@ -343,7 +352,9 @@ async function getUpdates(
   writePackageFile(packageJson);
 
   spinner.updateMessage(
-    `Packages up to date, ${updatable.length} can be upgraded.`
+    `Packages up to date, ${updatable.length} can be upgraded with ${chalk.blue(
+      "clockwork upgrade"
+    )}.`
   );
   spinner.stop(true);
 }
@@ -431,6 +442,12 @@ export default async function main() {
     const packageJson = readPackageFile();
     const pkgs = Object.values(packageJson.dependencies || {});
     await getUpdates(pkgs, moduleFolder, cwd, packageJson, true);
+    return;
+  } else if (isCommand(commands.update)) {
+    await validateClockworkPackage();
+    const packageJson = readPackageFile();
+    const pkgs = Object.values(packageJson.dependencies || {});
+    await getUpdates(pkgs, moduleFolder, cwd, packageJson, false);
     return;
   } else if (isCommand(commands.add)) {
     await validateClockworkPackage();
