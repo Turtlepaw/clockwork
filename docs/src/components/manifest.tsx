@@ -14,7 +14,7 @@ export function Manifest() {
     const fetchManifestAndLoad = async () => {
       try {
         const response = await fetch(
-          "https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/manifest.yml"
+          "https://raw.githubusercontent.com/Turtlepaw/clockwork/refs/heads/main/registry.yml"
         );
         if (!response.ok) {
           throw new Error(`Error: ${response.status} ${response.statusText}`);
