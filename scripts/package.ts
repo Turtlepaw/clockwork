@@ -66,7 +66,7 @@ export async function getLatestTag(repoUrl: string): Promise<string | null> {
       .split("\n")
       .map((line) => line.split("/").pop())
       .filter((tag) => tag)
-      .sort((a, b) => (a! > b! ? -1 : 1));
+      .sort((a, b) => (a! < b! ? 1 : -1));
     if (tags[0] == null) return null;
     return tags[0];
   } catch (error) {
