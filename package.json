@@ -1,6 +1,6 @@
 {
   "name": "clockwork",
-  "version": "1.1.6-fix.1",
+  "version": "1.1.6-fix.2",
   "main": "scripts/build.js",
   "repository": "https://github.com/turtlepaw/clockwork.git",
   "author": "https://github.com/turtlepaw",
