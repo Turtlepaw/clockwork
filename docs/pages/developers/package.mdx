@@ -13,7 +13,7 @@ name: my-package
 description: My awesome clockwork package
 version: 1.0.0 # github release tag
 # Watch Face Format version that's required for installing your package
-watchFaceFormatVersion: 2 # or unspecified for any version
+watchFaceFormatVersion: 2 # unspecified or * for any version
 ```
 
 <Callout type="info">
@@ -23,13 +23,13 @@ watchFaceFormatVersion: 2 # or unspecified for any version
 
 ## Fields
 
-| Field                    | Description                                                                                           |
-| :----------------------- | :---------------------------------------------------------------------------------------------------- |
-| `name`                   | The name of the package.                                                                              |
-| `description`            | A short description of the package.                                                                   |
-| `version`                | The version of the package. Must be a valid GitHub release tag.                                       |
-| `watchFaceFormatVersion` | The version of Watch Face Format required to use the package. If unspecified, any version is allowed. |
-| [`scripts`](#scripts)    | Scripts to run when the package is installed or updated.                                              |
+| Field                    | Description                                                                                                  |
+| :----------------------- | :----------------------------------------------------------------------------------------------------------- |
+| `name`                   | The name of the package.                                                                                     |
+| `description`            | A short description of the package.                                                                          |
+| `version`                | The version of the package. Must be a valid GitHub release tag.                                              |
+| `watchFaceFormatVersion` | The version of Watch Face Format required to use the package. If unspecified or `*`, any version is allowed. |
+| [`scripts`](#scripts)    | Scripts to run when the package is installed or updated.                                                     |
 
 <Callout type="info">
   Currently `watchFaceFormatVersion` only warns the user and doesn't prevent
@@ -45,7 +45,7 @@ watchFaceFormatVersion: 2 # or unspecified for any version
 
 #### Example
 
-```yaml copy filename="clockwork.yml"
+```yaml copy filename="clockwork.yaml"
 # ...
 scripts:
   postinstall: echo "Package installed!"

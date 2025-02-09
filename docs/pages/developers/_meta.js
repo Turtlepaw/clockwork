@@ -1,6 +1,6 @@
 const page = {
   registry: "Registry",
-  package: "Clockwork.yml",
+  package: "Clockwork.yaml",
   publishing: "Publishing a package",
   compiling: "Compiling Clockwork",
 };

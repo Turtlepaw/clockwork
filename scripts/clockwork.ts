@@ -167,12 +167,36 @@ async function addPackage(
     try {
       const packageFile = await validateClockworkPackage(packageFolder);
       const packageJson = readPackageFile(packageFile);
-      if (packageJson.watchFaceFormatVersion !== pkg.watchFaceFormatVersion) {
-        console.warn(
-          chalk.yellow(
-            `Package ${repoName} isn't compatible with this watch face format version.`
-          )
-        );
+      if (
+        pkg.watchFaceFormatVersion != null &&
+        packageJson.watchFaceFormatVersion != null
+      ) {
+        if (packageJson.watchFaceFormatVersion !== "*") {
+          const pkgVersion = Number(pkg.watchFaceFormatVersion);
+          const supportedVersion = Number(packageJson.watchFaceFormatVersion);
+
+          if (!isNaN(pkgVersion) && !isNaN(supportedVersion)) {
+            if (pkgVersion > supportedVersion) {
+              console.warn(
+                chalk.yellow(
+                  `Warning: Package ${repoName} requires a newer Watch Face Format version (${pkg.watchFaceFormatVersion}) than what is supported (${packageJson.watchFaceFormatVersion}).`
+                )
+              );
+            } else if (pkgVersion !== supportedVersion) {
+              console.warn(
+                chalk.yellow(
+                  `Warning: Package ${repoName} has a mismatched watch face format version (${pkg.watchFaceFormatVersion} vs ${packageJson.watchFaceFormatVersion}).`
+                )
+              );
+            }
+          } else {
+            console.warn(
+              chalk.red(
+                `Error: Invalid watch face format version detected in ${repoName} (${pkg.watchFaceFormatVersion} vs ${packageJson.watchFaceFormatVersion}).`
+              )
+            );
+          }
+        }
       }
 
       // Run post-install scripts

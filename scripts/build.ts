@@ -221,7 +221,7 @@ export default async function main() {
       const result = await executeCommand(javaPath.surround('"'), [
         "-jar",
         `"${validatorJar}"`,
-        packageFile.watchFaceFormatVersion ?? "2",
+        (packageFile.watchFaceFormatVersion ?? 2).toString(),
         `"${path.resolve("watchface/src/main/res/raw/watchface.xml")}"`,
       ]);
       if (!result.output.toString().includes("PASSED")) {

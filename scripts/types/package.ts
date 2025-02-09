@@ -33,7 +33,7 @@ export interface PackageFile {
   /**
    * Watch face format version. Used to ensure compatibility with dependencies.
    */
-  watchFaceFormatVersion?: string;
+  watchFaceFormatVersion?: number | string;
   /**
    * Scripts to be run at various stages of the project lifecycle.
    */
