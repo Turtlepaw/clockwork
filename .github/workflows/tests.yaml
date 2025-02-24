@@ -31,6 +31,8 @@ jobs:
         run: echo "CLOCKWORK_HOME=${{ github.workspace }}" >> $GITHUB_ENV
       - name: Check clockwork version
         run: ./clockwork-linux --version
+      - name: Run clockwork init
+        run: ./clockwork-linux init
       - name: Install a sample package
         run: ./clockwork-linux add example-ui-pkg
       - name: Verify package is installed
