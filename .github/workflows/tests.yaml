@@ -1,0 +1,37 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Build and test clockwork
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [23.x]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build
+        run: yarn build --if-present
+      - name: Check clockwork version
+        run: ./clockwork-linux --version
+      - name: Install a sample package
+        run: ./clockwork-linux add example-ui-pkg
+      - name: Verify package is installed
+        run: |
+          if [ ! -d "packages/example-ui-pkg" ]; then
+            echo "Package was not installed."
+            exit 1
+          fi
