@@ -27,6 +27,8 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Build
         run: yarn build --if-present
+      - name: Set CLOCKWORK_HOME
+        run: echo "CLOCKWORK_HOME=${{ github.workspace }}" >> $GITHUB_ENV
       - name: Check clockwork version
         run: ./clockwork-linux --version
       - name: Install a sample package
@@ -34,6 +36,6 @@ jobs:
       - name: Verify package is installed
         run: |
           if [ ! -d "packages/example-ui-pkg" ]; then
-            echo "Package was not installed."
-            exit 1
+              echo "Package was not installed."
+              exit 1
           fi
