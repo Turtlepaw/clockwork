@@ -519,15 +519,18 @@ export default async function main() {
     }
     return;
   } else if (isCommand(commands.init)) {
+    const yes = args.includes("--yes") || args.includes("-y");
     // If user ran clockwork init
-    const { projectName } = await inquirer.prompt([
-      {
-        type: "input",
-        name: "projectName",
-        message: "Enter the project name:",
-        default: process.cwd().split(path.sep).pop(),
-      },
-    ]);
+    const { projectName } = yes
+      ? { projectName: process.cwd().split(path.sep).pop() }
+      : await inquirer.prompt([
+          {
+            type: "input",
+            name: "projectName",
+            message: "Enter the project name:",
+            default: process.cwd().split(path.sep).pop(),
+          },
+        ]);
     const spinner = await progressIndicator(
       `Initializing ${PACKAGE_JSON_NAME}...`
     );

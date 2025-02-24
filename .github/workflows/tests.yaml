@@ -32,7 +32,7 @@ jobs:
       - name: Check clockwork version
         run: ./clockwork-linux --version
       - name: Run clockwork init
-        run: ./clockwork-linux init
+        run: ./clockwork-linux init -y
       - name: Install a sample package
         run: ./clockwork-linux add example-ui-pkg
       - name: Verify package is installed
