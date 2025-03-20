@@ -19,9 +19,15 @@ interface GetPackages {
   getPackagePath: (pkgName: string) => string;
 }
 
+/**
+ * @deprecated uses old package format
+ */
 export function parsePackage(packageUrl: string): ParsedPackage {
   // Parse the package e.g. https://github.com/owner/repo.git@latest
   // @latest defines the release tag (optional)
+  if (typeof packageUrl === "object" && "url" in packageUrl) {
+    return parseDependency(packageUrl);
+  }
   const parts = packageUrl.split("@");
   const url = parts[0];
   const version = parts[1] || "latest";

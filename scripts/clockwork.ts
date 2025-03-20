@@ -18,10 +18,10 @@ import {
   getDefaultBranch,
   getLatestTag,
   parseDependency,
-  parsePackage,
   readPackageFile,
   writePackageFile,
   executePostScripts,
+  parsePackage,
 } from "./package";
 import { executeCommand } from "./command";
 import { PACKAGE_JSON_NAME, PACKAGE_JSON_NAMES } from "./constants";
@@ -142,10 +142,15 @@ async function addPackage(
       url: packageUrl,
       version: _version,
       repoName,
-    } = parsePackage(packageStr);
+    } = parseDependency(packageStr);
     const version = resolveVersion(_version, latestTag);
 
-    await installPackage(packageUrl, moduleFolder, cwd, spinner, version);
+    await installPackage(
+      packageStr as unknown as object,
+      moduleFolder,
+      cwd,
+      spinner
+    );
 
     spinner.updateMessage(`Adding package to ${PACKAGE_JSON_NAME}...`);
 
@@ -218,13 +223,12 @@ async function addPackage(
 }
 
 async function installPackage(
-  packageStr: string,
+  packageStr: object,
   moduleFolder: string,
   cwd: string,
-  spinner: Spinner,
-  version: string = "latest"
+  spinner: Spinner
 ) {
-  const { url: packageUrl, repoName } = parsePackage(packageStr);
+  const { url: packageUrl, repoName, version } = parseDependency(packageStr);
   const packagePath = path.join(moduleFolder, repoName);
 
   // Remove the existing directory if it exists
@@ -289,7 +293,7 @@ async function getUpdates(
         if (currentUrl !== packageUrl) {
           spinner.updateMessage(`URL changed for ${repoName}, reinstalling...`);
           fs.rmSync(packagePath, { recursive: true, force: true });
-          await installPackage(packageUrl, moduleFolder, cwd, spinner, version);
+          await installPackage(pkg, moduleFolder, cwd, spinner);
           continue;
         }
 
@@ -387,7 +391,7 @@ async function getUpdates(
       }
     } else {
       // If the package isn't found, install it
-      await installPackage(packageUrl, moduleFolder, cwd, spinner);
+      await installPackage(pkg, moduleFolder, cwd, spinner);
     }
   }
 
