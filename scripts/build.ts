@@ -173,10 +173,7 @@ export default async function main() {
 
   const buildToolsPath = path.resolve(await getBinaryPath(), "build-tools");
   // Validation
-  const validatorJar = path.resolve(
-    buildToolsPath,
-    "dwf-format-2-validator-1.0.jar"
-  );
+  const validatorJar = path.resolve(buildToolsPath, "wff-validator.jar");
 
   if (!fs.existsSync(validatorJar) && !nonInteractive) {
     const answer = await inquirer.prompt([
@@ -199,7 +196,7 @@ export default async function main() {
         }
 
         await downloadFile(
-          "https://github.com/google/watchface/releases/download/latest/dwf-format-2-validator-1.0.jar",
+          "https://github.com/google/watchface/releases/download/latest/wff-validator.jar",
           validatorJar
         );
 
