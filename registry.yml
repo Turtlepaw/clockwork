@@ -4,3 +4,5 @@ example-ui-pkg:
   url: https://github.com/WearOSCommunity/example-ui-pkg.git
 wff-text-resize-pkg:
   url: https://github.com/gondwanasoft/wff-text-resize-pkg.git
+wff-sample-complic-pkg:
+  url: https://github.com/gondwanasoft/wff-sample-complic-pkg.git
